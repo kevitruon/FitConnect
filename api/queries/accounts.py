@@ -6,6 +6,7 @@ from typing import Union, Optional
 class AccountErrorMsg(BaseModel):
     message: str
 
+
 class DuplicateAccountError(ValueError):
     message: str
 
@@ -20,12 +21,14 @@ class AccountOut(BaseModel):
     id: int
     username: str
     email: str
+
+
+class AccountOutWithPassword(AccountOut):
     hashed_password: str
 
 
-
 class AccountRepository:
-    def user_in_to_out(self, id: int, user: AccountIn):
+    def user_in_to_out(self, id: int, user: AccountOutWithPassword):
         old_data = user.dict()
         return AccountOut(id=id, **old_data)
 
@@ -37,33 +40,26 @@ class AccountRepository:
             password=record[3],
         )
 
-    def create(self, user: AccountIn, hashed_password: str) -> AccountOut:
+    def create(
+        self, user: AccountIn, hashed_password: str
+    ) -> AccountOutWithPassword:
         try:
             with pool.connection() as conn:
                 with conn.cursor() as db:
+                    params = [user.username, user.email, "hashesdsdsword"]
+                    print("Hashed PASS:", hashed_password)
+                    print("User is", user)
                     result = db.execute(
                         """
-                        INSERT INTO users (
-                            username
-                            , email
-                            , password
-                        )
-                        VALUES
-                            (%s, %s, %s)
-                        RETURNING
-                            id
-                            , username
-                            , email
-                            , password;
+                        INSERT INTO users (username, email, hashed_password)
+                        VALUES (%s, %s, %s)
+                        RETURNING id, username, email, hashed_password;
                         """,
-                        [
-                            user.username,
-                            user.email,
-                            hashed_password,
-                        ]
+                        params,
                     )
                     user_id = result.fetchone()[0]
-                    return AccountOut(
+                    print("AAAAAAAAAAAAAAAsdasdsasAAAAAAAAAAAAAAAA", user_id)
+                    return AccountOutWithPassword(
                         id=user_id,
                         username=user.username,
                         email=user.email,
@@ -72,8 +68,6 @@ class AccountRepository:
 
         except Exception:
             return {"message": "Could not create a user"}
-
-
 
     def get_all(self) -> Union[AccountOut, AccountErrorMsg]:
         try:
@@ -103,17 +97,16 @@ class AccountRepository:
                         FROM users
                         WHERE id = %s
                         """,
-                        [user_id]
+                        [user_id],
                     )
                     record = result.fetchone()
                     return self.record_to_user_out(record)
         except Exception as e:
             return AccountErrorMsg(message="error!" + str(e))
 
-    def update(self, user_id: int, user: AccountIn) -> Union[
-        AccountOut,
-        AccountErrorMsg
-    ]:
+    def update(
+        self, user_id: int, user: AccountIn
+    ) -> Union[AccountOut, AccountErrorMsg]:
         try:
             with pool.connection() as conn:
                 with conn.cursor() as db:
@@ -125,12 +118,7 @@ class AccountRepository:
                             , password = %s
                         WHERE id = %s
                         """,
-                        [
-                            user.username,
-                            user.email,
-                            user.password,
-                            user_id
-                        ]
+                        [user.username, user.email, user.password, user_id],
                     )
                     return self.user_in_to_out(user_id, user)
         except Exception as e:
@@ -145,7 +133,7 @@ class AccountRepository:
                         DELETE FROM users
                         WHERE id = %s
                         """,
-                        [user_id]
+                        [user_id],
                     )
                     return True
         except Exception as e:

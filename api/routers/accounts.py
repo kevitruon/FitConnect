@@ -1,8 +1,16 @@
 from fastapi import (
-    APIRouter, Depends, Response, HTTPException, status, Request,
+    APIRouter,
+    Depends,
+    Response,
+    HTTPException,
+    status,
+    Request,
 )
 from queries.accounts import (
-    AccountIn, AccountOut, AccountRepository, AccountErrorMsg,
+    AccountIn,
+    AccountOut,
+    AccountRepository,
+    AccountErrorMsg,
     DuplicateAccountError,
 )
 from typing import List, Optional, Union
@@ -10,26 +18,35 @@ from jwtdown_fastapi.authentication import Token
 from authenticator import authenticator
 from pydantic import BaseModel
 
+
 class AccountForm(BaseModel):
     username: str
     password: str
 
+
 class AccountToken(Token):
     account: AccountOut
+
 
 class HttpError(BaseModel):
     detail: str
 
+
 router = APIRouter()
 
+
 @router.get("/protected", response_model=bool)
-async def get_token(request: Request, account_data: dict = Depends(authenticator.get_current_account_data)):
+async def get_token(
+    request: Request,
+    account_data: dict = Depends(authenticator.get_current_account_data),
+):
     return True
+
 
 @router.get("/token", response_model=AccountToken | None)
 async def get_token(
     request: Request,
-    account: AccountOut = Depends(authenticator.try_get_current_account_data)
+    account: AccountOut = Depends(authenticator.try_get_current_account_data),
 ) -> AccountToken | None:
     if account and authenticator.cookie_name in request.cookies:
         return {
@@ -38,15 +55,15 @@ async def get_token(
             "account": account,
         }
 
+
 @router.post("/users", response_model=AccountToken | HttpError)
 async def create_user(
     info: AccountIn,
     request: Request,
     response: Response,
-    repo: AccountRepository = Depends()
-    ):
+    repo: AccountRepository = Depends(),
+):
     hashed_password = authenticator.hash_password(info.password)
-    print(hashed_password)
     try:
         account = repo.create(info, hashed_password)
         print("AAAAAAAAAAAAAAAAAAAAAAAAAAAA")
@@ -57,11 +74,12 @@ async def create_user(
         )
     print("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
     form = AccountForm(username=info.username, password=info.password)
+    print()
     print("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
     token = await authenticator.login(response, request, form, repo)
+    print("This is token", token)
     print("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD")
     return AccountToken(account=account, **token.dict())
-
 
 
 @router.get("/users", response_model=List[AccountOut])
@@ -83,7 +101,9 @@ def get_detail(
     return result
 
 
-@router.put("/users/{user_id}", response_model=Union[AccountOut, AccountErrorMsg])
+@router.put(
+    "/users/{user_id}", response_model=Union[AccountOut, AccountErrorMsg]
+)
 def update_user(
     user_id: int,
     user: AccountIn,
