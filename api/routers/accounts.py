@@ -1,94 +1,42 @@
-from fastapi import APIRouter, Depends, Response, HTTPException, status, Request
-from typing import List, Union, Optional
-from queries.accounts import (
-    AccountIn,
-    AccountOut,
-    AccountRepository,
-    AccountErrorMsg
+from fastapi import (
+    APIRouter, Depends, Response, HTTPException, status, Request,
 )
-
+from queries.accounts import (
+    AccountIn, AccountOut, AccountRepository, AccountErrorMsg,
+    DuplicateAccountError,
+)
+from typing import List, Optional, Union
 from jwtdown_fastapi.authentication import Token
-from queries.authenticator import authenticator
-
+from authenticator import authenticator
 from pydantic import BaseModel
-from queries.accounts import DuplicateAccountError
-    
-
-
-
 
 class AccountForm(BaseModel):
     username: str
     password: str
 
-
 class AccountToken(Token):
-    user: AccountOut
-
+    account: AccountOut
 
 class HttpError(BaseModel):
     detail: str
 
-
-
 router = APIRouter()
 
 @router.get("/protected", response_model=bool)
-async def get_token(request: Request, user_data: dict = Depends(authenticator.get_current_account_data)):
+async def get_token(request: Request, account_data: dict = Depends(authenticator.get_current_account_data)):
     return True
-
 
 @router.get("/token", response_model=AccountToken | None)
 async def get_token(
     request: Request,
-    user: AccountOut = Depends(authenticator.try_get_current_account_data)
-):
-    if user and authenticator.cookie_name in request.cookies:
+    account: AccountOut = Depends(authenticator.try_get_current_account_data)
+) -> AccountToken | None:
+    if account and authenticator.cookie_name in request.cookies:
         return {
             "access_token": request.cookies[authenticator.cookie_name],
             "type": "Bearer",
-            "user": user,
+            "account": account,
         }
-
-
-@router.post("/api/accounts", response_model=AccountToken | HttpError)
-async def create_account(
-    info: AccountIn,
-    request: Request,
-    response: Response,
-    repo: AccountRepository = Depends(),
-):
-    hashed_password = authenticator.hash_password(info.password)
-    try:
-        account = repo.create(info, hashed_password)
-    except DuplicateAccountError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot create an account with those credentials",
-        )
-    form = AccountForm(username=info.email, password=info.password)
-    token = await authenticator.login(response, request, form, repo)
-    return AccountToken(account=account, **token.dict())
-
-
-
-@router.delete("/token", response_model=bool)
-async def logout(
-    request: Request,
-    response: Response
-):
-    try:
-        authenticator.logout(response)
-        return True
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e),
-        )
-
-
-
-
 
 @router.post("/users", response_model=AccountToken | HttpError)
 async def create_user(
@@ -96,31 +44,24 @@ async def create_user(
     request: Request,
     response: Response,
     repo: AccountRepository = Depends()
-):
-
+    ):
     hashed_password = authenticator.hash_password(info.password)
+    print(hashed_password)
     try:
-        user = repo.create(info, hashed_password)
+        account = repo.create(info, hashed_password)
+        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAA")
     except DuplicateAccountError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot create an user with those credentials",
         )
-    form = AccountForm(username=info.email, password=info.password)
+    print("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
+    form = AccountForm(username=info.username, password=info.password)
+    print("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
     token = await authenticator.login(response, request, form, repo)
-    print("token", token)
-    return AccountToken(user=user, **token.dict())
+    print("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD")
+    return AccountToken(account=account, **token.dict())
 
-
-
-
-
-
-
-
-
-
-    
 
 
 @router.get("/users", response_model=List[AccountOut])
@@ -159,7 +100,3 @@ def delete_user(
     repo: AccountRepository = Depends(),
 ) -> bool:
     return repo.delete(user_id)
-
-
-
-

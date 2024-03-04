@@ -7,7 +7,7 @@ class AccountErrorMsg(BaseModel):
     message: str
 
 class DuplicateAccountError(ValueError):
-    pass
+    message: str
 
 
 class AccountIn(BaseModel):
@@ -20,10 +20,7 @@ class AccountOut(BaseModel):
     id: int
     username: str
     email: str
-    password: str
-
-class AccountOutWithPassword(AccountOut):
-    password: str
+    hashed_password: str
 
 
 
@@ -40,29 +37,42 @@ class AccountRepository:
             password=record[3],
         )
 
-    def create(self, user: AccountIn, hashed_password: str) -> Union[AccountOut, AccountErrorMsg]:
+    def create(self, user: AccountIn, hashed_password: str) -> AccountOut:
         try:
             with pool.connection() as conn:
                 with conn.cursor() as db:
                     result = db.execute(
                         """
-                        INSERT INTO users
-                            (username, email, password)
+                        INSERT INTO users (
+                            username
+                            , email
+                            , password
+                        )
                         VALUES
                             (%s, %s, %s)
-                        RETURNING id;
+                        RETURNING
+                            id
+                            , username
+                            , email
+                            , password;
                         """,
                         [
                             user.username,
                             user.email,
-                            hashed_password  # Use the hashed password
+                            hashed_password,
                         ]
                     )
-                    id = result.fetchone()[0]
-                    return self.user_in_to_out(id, user)
+                    user_id = result.fetchone()[0]
+                    return AccountOut(
+                        id=user_id,
+                        username=user.username,
+                        email=user.email,
+                        hashed_password=hashed_password,
+                    )
 
-        except Exception as e:
-            return AccountErrorMsg(message="error! " + str(e))
+        except Exception:
+            return {"message": "Could not create a user"}
+
 
 
     def get_all(self) -> Union[AccountOut, AccountErrorMsg]:

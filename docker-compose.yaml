@@ -9,7 +9,7 @@ services:
             CORS_HOST: http://localhost:5173
             DATABASE_URL: postgresql://admin:password@postgres/fitconnect
             WAIT_HOSTS: postgres:5432
-            SIGNING_KEY: $SIGNING_KEY
+            SIGNING_KEY: 3635dd10c86b1fb68880e227d2a849883b911e53c941e070c5d18f2ef638ac5c
 
         build:
             context: api
