@@ -9,15 +9,11 @@ from queries.accounts import (
 
 from jwtdown_fastapi.authentication import Token
 from queries.authenticator import authenticator
-from typing import List, Union, Optional
+
 from pydantic import BaseModel
-from queries.accounts import (
-    AccountIn,
-    AccountOut,
-    AccountRepository,
-    DuplicateAccountError,
-    AccountErrorMsg,
-)
+from queries.accounts import DuplicateAccountError
+    
+
 
 
 
