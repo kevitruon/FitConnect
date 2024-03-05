@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from queries.pool import pool
-from typing import Union, Optional
+from typing import Union
 
 
 class AccountErrorMsg(BaseModel):
@@ -139,22 +139,23 @@ class AccountRepository:
         except Exception as e:
             return AccountErrorMsg(message="error!" + str(e))
 
-    # def get_detail(self, user_id: str) -> Optional[AccountOut]:
-    #     try:
-    #         with pool.connection() as conn:
-    #             with conn.cursor() as db:
-    #                 result = db.execute(
-    #                     """
-    #                     SELECT id, username, email, hashed_password
-    #                     FROM users
-    #                     WHERE id = %s
-    #                     """,
-    #                     [user_id],
-    #                 )
-    #                 record = result.fetchone()
-    #                 return self.record_to_user_out(record)
-    #     except Exception as e:
-    #         return AccountErrorMsg(message="error!" + str(e))
+    def get_detail(self, user_id: int) -> Optional[AccountOut]:
+        try:
+            with pool.connection() as conn:
+                with conn.cursor() as db:
+                    result = db.execute(
+                        """
+                        SELECT user_id, username, email, hashed_password
+                        FROM users
+                        WHERE user_id = %s
+                        """,
+                        [user_id],
+                    )
+                    record = result.fetchone()
+                    return self.record_to_user_out(record)
+        except Exception as e:
+            return AccountErrorMsg(message="error!" + str(e))
+
     def get(self, email: str) -> AccountOutWithPassword:
         try:
             print("is trying get somehow?")
@@ -194,7 +195,7 @@ class AccountRepository:
                         SET username = %s
                             , email = %s
                             , password = %s
-                        WHERE id = %s
+                        WHERE user_id = %s
                         """,
                         [user.username, user.email, user.password, user_id],
                     )

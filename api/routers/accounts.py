@@ -36,7 +36,7 @@ router = APIRouter()
 
 
 @router.get("/protected", response_model=bool)
-async def get_token(
+async def get_tokens(
     request: Request,
     account_data: dict = Depends(authenticator.get_current_account_data),
 ):
