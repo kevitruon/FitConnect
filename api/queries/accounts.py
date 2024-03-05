@@ -33,7 +33,7 @@ class AccountRepository:
         return AccountOut(id=id, **old_data)
 
     def record_to_user_out(self, record):
-        return AccountOut(
+        return AccountOutWithPassword(
             id=record[0],
             username=record[1],
             email=record[2],
@@ -87,11 +87,9 @@ class AccountRepository:
         try:
             print("USER", user)
             print("HASHED", hashed_password)
-            uname = user.username
-            uemail = user.email
             with pool.connection() as conn:
                 with conn.cursor() as cur:
-                    cur.execute(
+                    result = cur.execute(
                         """
                         INSERT INTO users
                             (username,
@@ -100,7 +98,10 @@ class AccountRepository:
                         VALUES
                             (%s, %s, %s)
                         RETURNING
-                        id;
+                        user_id,
+                        username,
+                        email,
+                        hashed_password;
                         """,
                         [
                             user.username,
@@ -108,19 +109,14 @@ class AccountRepository:
                             hashed_password,
                         ],
                     )
-                    print("insert worked?")
-                    cur.execute("SELECT * FROM users")
-                    res = cur.fetchone()
-                    print("RESULT", res)
-                    # user_id = result.fetchone()[0]
-                    print("ID GOTTEN", user_id="99")
-                    (id, username, email, hashed_password) = res
-                    print("ID", id)
-                    print("USERNAME", username)
-                    print("EMAIL", email)
-                    print("HASHED_PASSWORD", hashed_password)
+                    id = result.fetchone()[0]
+                    old_data = user.dict()
+                    print("SADASDSADASD", id)
+
                     return AccountOutWithPassword(
-                        id, username, email, hashed_password
+                        **old_data,
+                        id=id,
+                        hashed_password=hashed_password,
                     )
         except Exception:
             return {"message": "Could not create a user"}
@@ -131,9 +127,9 @@ class AccountRepository:
                 with conn.cursor() as db:
                     db.execute(
                         """
-                        SELECT id, username, email, hashed_password
+                        SELECT user_id, username, email, hashed_password
                         FROM users
-                        ORDER BY id;
+                        ORDER BY user_id;
                         """
                     )
                     return [
@@ -168,20 +164,21 @@ class AccountRepository:
                     result = db.execute(
                         """
                         SELECT
-                        id,
+                        user_id,
                         username,
                         email,
                         hashed_password
                         FROM users
-                        WHERE email = %s
+                        WHERE email = %s;
                         """,
                         [email],
                     )
                     record = result.fetchone()
-                    print("record found", record)
                     if record is None:
                         return None
-                    return self.record_to_account_out(record)
+                    user_data = self.record_to_user_out(record)
+                    print("USER DATA", user_data)
+                    return AccountOutWithPassword(**user_data.dict())
         except Exception:
             return {"message": "Could not get account"}
 
