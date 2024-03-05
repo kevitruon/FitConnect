@@ -77,6 +77,9 @@ async def create_user(
     print()
     print("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
     token = await authenticator.login(response, request, form, repo)
+    # token = {
+    #     account: {"id": "1", "username": "kevit", "password": "<PASSWORD>"}
+    # }
     print("This is token", token)
     print("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD")
     return AccountToken(account=account, **token.dict())

@@ -7,12 +7,12 @@ from queries.accounts import AccountRepository, AccountOut
 class AccountAuthenticator(Authenticator):
     async def get_account_data(
         self,
-        username: str,
+        email: str,
         accounts: AccountRepository,
     ):
         # Use your repo to get the account based on the
         # username (which could be an email)
-        return accounts.get_detail(username)
+        return accounts.get(email)
 
     def get_account_getter(
         self,
@@ -24,14 +24,13 @@ class AccountAuthenticator(Authenticator):
     def get_hashed_password(self, account: AccountOut):
         # Return the encrypted password value from your
         # account object
-        print("DICT",account)
+        print("DICT", account)
         return account.hashed_password
 
     def get_account_data_for_cookie(self, account: AccountOut):
         # Return the username and the data for the cookie.
         # You must return TWO values from this method.
         return account.username, AccountOut(**account.dict())
-
 
 
 authenticator = AccountAuthenticator(os.environ["SIGNING_KEY"])

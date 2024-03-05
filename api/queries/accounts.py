@@ -18,7 +18,7 @@ class AccountIn(BaseModel):
 
 
 class AccountOut(BaseModel):
-    id: int
+    id: str
     username: str
     email: str
 
@@ -37,35 +37,91 @@ class AccountRepository:
             id=record[0],
             username=record[1],
             email=record[2],
-            password=record[3],
+            hashed_password=record[3],
         )
 
+    # def create(
+    #     self, user: AccountIn, hashed_password: str
+    # ) -> AccountOutWithPassword:
+    #     try:
+    #         with pool.connection() as conn:
+    #             with conn.cursor() as db:
+    #                 params = [
+    #                     "CoolUser1",
+    #                     "Something1@gmail.com",
+    #                     hashed_password,
+    #                 ]
+    #                 print("Hashed PASS:", hashed_password)
+    #                 print("User is", user)
+    #                 result = db.execute(
+    #                     """
+    #                     INSERT INTO users (username, email, hashed_password)
+    #                     VALUES ("CoolUser1", "Something1@gmail.com", %s)
+    #                     RETURNING id, username, email, hashed_password;
+    #                     """,
+    #                     params,
+    #                 )
+    #                 user_id = result.fetchone()[0]
+    #                 print("AAAAAAAAAAAAAAAsdasdsasAAAAAAAAAAAAAAAA", user_id)
+    #                 coolVar = AccountOutWithPassword(
+    #                     id=user_id,
+    #                     username="CoolUser1",
+    #                     email="Something1@gmail.com",
+    #                     hashed_password=hashed_password,
+    #                 )
+    #                 print("COOLVAR", coolVar)
+    #                 return coolVar
+
+    #                 # return AccountOutWithPassword(
+    #                 #     id=user_id,
+    #                 #     username=user.username,
+    #                 #     email=user.email,
+    #                 #     hashed_password=hashed_password,
+    #                 # )
+
+    # except Exception:
+    #     return {"message": "Could not create a user"}
     def create(
         self, user: AccountIn, hashed_password: str
     ) -> AccountOutWithPassword:
         try:
+            print("USER", user)
+            print("HASHED", hashed_password)
+            uname = user.username
+            uemail = user.email
             with pool.connection() as conn:
-                with conn.cursor() as db:
-                    params = [user.username, user.email, "hashesdsdsword"]
-                    print("Hashed PASS:", hashed_password)
-                    print("User is", user)
-                    result = db.execute(
+                with conn.cursor() as cur:
+                    cur.execute(
                         """
-                        INSERT INTO users (username, email, hashed_password)
-                        VALUES (%s, %s, %s)
-                        RETURNING id, username, email, hashed_password;
+                        INSERT INTO users
+                            (username,
+                            email,
+                            hashed_password)
+                        VALUES
+                            (%s, %s, %s)
+                        RETURNING
+                        id;
                         """,
-                        params,
+                        [
+                            user.username,
+                            user.email,
+                            hashed_password,
+                        ],
                     )
-                    user_id = result.fetchone()[0]
-                    print("AAAAAAAAAAAAAAAsdasdsasAAAAAAAAAAAAAAAA", user_id)
+                    print("insert worked?")
+                    cur.execute("SELECT * FROM users")
+                    res = cur.fetchone()
+                    print("RESULT", res)
+                    # user_id = result.fetchone()[0]
+                    print("ID GOTTEN", user_id="99")
+                    (id, username, email, hashed_password) = res
+                    print("ID", id)
+                    print("USERNAME", username)
+                    print("EMAIL", email)
+                    print("HASHED_PASSWORD", hashed_password)
                     return AccountOutWithPassword(
-                        id=user_id,
-                        username=user.username,
-                        email=user.email,
-                        hashed_password=hashed_password,
+                        id, username, email, hashed_password
                     )
-
         except Exception:
             return {"message": "Could not create a user"}
 
@@ -75,7 +131,7 @@ class AccountRepository:
                 with conn.cursor() as db:
                     db.execute(
                         """
-                        SELECT id, username, email, password
+                        SELECT id, username, email, hashed_password
                         FROM users
                         ORDER BY id;
                         """
@@ -87,22 +143,47 @@ class AccountRepository:
         except Exception as e:
             return AccountErrorMsg(message="error!" + str(e))
 
-    def get_detail(self, user_id: int) -> Optional[AccountOut]:
+    # def get_detail(self, user_id: str) -> Optional[AccountOut]:
+    #     try:
+    #         with pool.connection() as conn:
+    #             with conn.cursor() as db:
+    #                 result = db.execute(
+    #                     """
+    #                     SELECT id, username, email, hashed_password
+    #                     FROM users
+    #                     WHERE id = %s
+    #                     """,
+    #                     [user_id],
+    #                 )
+    #                 record = result.fetchone()
+    #                 return self.record_to_user_out(record)
+    #     except Exception as e:
+    #         return AccountErrorMsg(message="error!" + str(e))
+    def get(self, email: str) -> AccountOutWithPassword:
         try:
+            print("is trying get somehow?")
+            print("email", email)
             with pool.connection() as conn:
                 with conn.cursor() as db:
                     result = db.execute(
                         """
-                        SELECT id, username, email, password
+                        SELECT
+                        id,
+                        username,
+                        email,
+                        hashed_password
                         FROM users
-                        WHERE id = %s
+                        WHERE email = %s
                         """,
-                        [user_id],
+                        [email],
                     )
                     record = result.fetchone()
-                    return self.record_to_user_out(record)
-        except Exception as e:
-            return AccountErrorMsg(message="error!" + str(e))
+                    print("record found", record)
+                    if record is None:
+                        return None
+                    return self.record_to_account_out(record)
+        except Exception:
+            return {"message": "Could not get account"}
 
     def update(
         self, user_id: int, user: AccountIn
