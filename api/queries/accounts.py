@@ -14,6 +14,7 @@ class DuplicateAccountError(ValueError):
 class AccountIn(BaseModel):
     username: str
     email: str
+    email: str
     password: str
 
 
