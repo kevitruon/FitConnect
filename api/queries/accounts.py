@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from queries.pool import pool
-from typing import Union
+from typing import Union, Optional
 
 
 class AccountErrorMsg(BaseModel):
