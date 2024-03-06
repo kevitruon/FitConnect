@@ -3,16 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from routers import accounts
 from authenticator import authenticator
+from routers import friendships
 
 app = FastAPI()
 app.include_router(accounts.router)
 app.include_router(authenticator.router)
+app.include_router(friendships.router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        os.environ.get("CORS_HOST")
-    ],
+    allow_origins=[os.environ.get("CORS_HOST")],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,6 +27,6 @@ def launch_details():
             "week": 17,
             "day": 5,
             "hour": 19,
-            "min": "00"
+            "min": "00",
         }
     }
