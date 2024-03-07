@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Response, Request
-from typing import List, Optional, Union
+from typing import List, Optional
 from queries.workouts import (
     WorkoutIn,
     WorkoutOut,

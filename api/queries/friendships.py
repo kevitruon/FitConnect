@@ -43,9 +43,17 @@ class FriendshipRepo(BaseModel):
                 with conn.cursor() as cur:
                     result = cur.execute(
                         """
-                        INSERT INTO friendships (user1_id, user2_id)
-                        VALUES (%s, %s)
-                        RETURNING friendship_id, user1_id, user2_id, status, date_requested, date_accepted;
+                        INSERT INTO friendships
+                            (user1_id, user2_id)
+                        VALUES
+                            (%s, %s)
+                        RETURNING
+                            friendship_id,
+                            user1_id,
+                            user2_id,
+                            status,
+                            date_requested,
+                            date_accepted;
                         """,
                         [friendship.user_id, friendship.friend_id],
                     )
@@ -54,7 +62,7 @@ class FriendshipRepo(BaseModel):
         except Exception as e:
             if "duplicate key value violates unique constraint" in str(e):
                 raise DuplicateFriendshipError("Friendship already exists")
-            raise FriendshipErrorMsg(message="Could not create friendship")
+            raise FriendshipErrorMsg(message="error!" + str(e))
 
     def get(self, friendship_id: int) -> FriendshipOut:
         try:
@@ -62,7 +70,12 @@ class FriendshipRepo(BaseModel):
                 with conn.cursor() as db:
                     result = db.execute(
                         """
-                        SELECT friendship_id, user1_id, user2_id, status, date_requested, date_accepted
+                        SELECT
+                            friendship_id,
+                            user1_id, user2_id,
+                            status,
+                            date_requested,
+                            date_accepted
                         FROM friendships
                         WHERE friendship_id = %s
                         """,
@@ -76,7 +89,7 @@ class FriendshipRepo(BaseModel):
                             message="Friendship not found"
                         )
         except Exception as e:
-            raise FriendshipErrorMsg(message="Could not get friendship")
+            raise FriendshipErrorMsg(message="error!" + str(e))
 
     def get_all(
         self, user_id: int
@@ -86,10 +99,19 @@ class FriendshipRepo(BaseModel):
                 with conn.cursor() as db:
                     db.execute(
                         """
-                        SELECT friendship_id, user1_id, user2_id, status, date_requested, date_accepted
-                        FROM friendships
-                        WHERE user1_id = %s OR user2_id = %s
-                        ORDER BY friendship_id;
+                        SELECT
+                            friendship_id,
+                            user1_id,
+                            user2_id,
+                            status,
+                            date_requested,
+                            date_accepted
+                        FROM
+                            friendships
+                        WHERE
+                            user1_id = %s OR user2_id = %s
+                        ORDER BY
+                            friendship_id;
                         """,
                         [user_id, user_id],
                     )
@@ -100,7 +122,7 @@ class FriendshipRepo(BaseModel):
                     print("Result from get_all:", result)  # Print the result
                     return result
         except Exception as e:
-            return FriendshipErrorMsg(message="Error retrieving friendships")
+            return FriendshipErrorMsg(message="error!" + str(e))
 
     def set_pending(
         self, friendship_id: int
@@ -111,9 +133,18 @@ class FriendshipRepo(BaseModel):
                     db.execute(
                         """
                         UPDATE friendships
-                        SET status = 'pending', date_accepted = NULL
-                        WHERE friendship_id = %s
-                        RETURNING friendship_id, user1_id, user2_id, status, date_requested, date_accepted;
+                        SET
+                            status = 'pending',
+                            date_accepted = NULL
+                        WHERE
+                            friendship_id = %s
+                        RETURNING
+                            friendship_id,
+                            user1_id,
+                            user2_id,
+                            status,
+                            date_requested,
+                            date_accepted;
                         """,
                         [friendship_id],
                     )
@@ -125,9 +156,7 @@ class FriendshipRepo(BaseModel):
                             message="Friendship not found"
                         )
         except Exception as e:
-            return FriendshipErrorMsg(
-                message="Error setting friendship as pending"
-            )
+            return FriendshipErrorMsg(message="error!" + str(e))
 
     def set_accepted(
         self, friendship_id: int
@@ -137,10 +166,20 @@ class FriendshipRepo(BaseModel):
                 with conn.cursor() as db:
                     db.execute(
                         """
-                        UPDATE friendships
-                        SET status = 'accepted', date_accepted = NOW()
-                        WHERE friendship_id = %s
-                        RETURNING friendship_id, user1_id, user2_id, status, date_requested, date_accepted;
+                        UPDATE
+                            friendships
+                        SET
+                            status = 'accepted',
+                            date_accepted = NOW()
+                        WHERE
+                            friendship_id = %s
+                        RETURNING
+                            friendship_id,
+                            user1_id,
+                            user2_id,
+                            status,
+                            date_requested,
+                            date_accepted;
                         """,
                         [friendship_id],
                     )
@@ -152,9 +191,7 @@ class FriendshipRepo(BaseModel):
                             message="Friendship not found"
                         )
         except Exception as e:
-            return FriendshipErrorMsg(
-                message="Error setting friendship as accepted"
-            )
+            return FriendshipErrorMsg(message="error!" + str(e))
 
     def set_rejected(
         self, friendship_id: int
@@ -164,10 +201,20 @@ class FriendshipRepo(BaseModel):
                 with conn.cursor() as db:
                     db.execute(
                         """
-                        UPDATE friendships
-                        SET status = 'rejected', date_accepted = NULL
-                        WHERE friendship_id = %s
-                        RETURNING friendship_id, user1_id, user2_id, status, date_requested, date_accepted;
+                        UPDATE
+                            friendships
+                        SET
+                            status = 'rejected',
+                            date_accepted = NULL
+                        WHERE
+                            friendship_id = %s
+                        RETURNING
+                            friendship_id,
+                            user1_id,
+                            user2_id,
+                            status,
+                            date_requested,
+                            date_accepted;
                         """,
                         [friendship_id],
                     )
@@ -179,9 +226,7 @@ class FriendshipRepo(BaseModel):
                             message="Friendship not found"
                         )
         except Exception as e:
-            return FriendshipErrorMsg(
-                message="Error setting friendship as rejected"
-            )
+            return FriendshipErrorMsg(message="error!" + str(e))
 
     def delete(self, friendship_id: int) -> Union[bool, FriendshipErrorMsg]:
         try:
@@ -189,8 +234,10 @@ class FriendshipRepo(BaseModel):
                 with conn.cursor() as db:
                     db.execute(
                         """
-                        DELETE FROM friendships
-                        WHERE friendship_id = %s
+                        DELETE FROM
+                            friendships
+                        WHERE
+                            friendship_id = %s
                         """,
                         [friendship_id],
                     )
@@ -202,4 +249,4 @@ class FriendshipRepo(BaseModel):
                             message="Friendship not found"
                         )
         except Exception as e:
-            return FriendshipErrorMsg(message="Error deleting friendship")
+            return FriendshipErrorMsg(message="error!" + str(e))

@@ -93,7 +93,7 @@ class WorkoutRepository:
                     ]
                     return result
         except Exception as e:
-            return WorkoutErrorMsg(message="Error retrieving workouts")
+            return WorkoutErrorMsg(message="error!" + str(e))
 
     def get_detail(
         self, workout_id: int, user_id: int
