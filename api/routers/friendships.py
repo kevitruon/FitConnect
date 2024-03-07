@@ -1,7 +1,6 @@
 from fastapi import (
     APIRouter,
     Depends,
-    Response,
     HTTPException,
     status,
     Request,
@@ -13,10 +12,8 @@ from queries.friendships import (
     FriendshipErrorMsg,
     DuplicateFriendshipError,
 )
-from typing import List, Optional, Union
-from jwtdown_fastapi.authentication import Token
+from typing import List
 from authenticator import authenticator
-from pydantic import BaseModel
 import pydantic
 
 

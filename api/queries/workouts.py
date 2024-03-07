@@ -3,19 +3,23 @@ from datetime import date
 from queries.pool import pool
 from typing import Union, Optional, List
 
+
 class WorkoutErrorMsg(BaseModel):
     message: str
+
 
 class WorkoutIn(BaseModel):
     user_id: int
     workout_date: date
     notes: Optional[str] = None
 
+
 class WorkoutOut(BaseModel):
     workout_id: int
     user_id: int
     workout_date: date
     notes: Optional[str] = None
+
 
 class WorkoutRepository:
     def workout_in_to_out(self, id: int, workout: WorkoutOut):
@@ -30,7 +34,9 @@ class WorkoutRepository:
             notes=record[3],
         )
 
-    def create(self, workout: WorkoutIn, user_id: int) -> Union[WorkoutOut, WorkoutErrorMsg]:
+    def create(
+        self, workout: WorkoutIn, user_id: int
+    ) -> Union[WorkoutOut, WorkoutErrorMsg]:
         try:
             with pool.connection() as conn:
                 with conn.cursor() as cur:
@@ -62,9 +68,9 @@ class WorkoutRepository:
                         notes=workout.notes,
                     )
         except Exception as e:
-            return WorkoutErrorMsg(message="Could not create a workout: " + str(e))
-
-
+            return WorkoutErrorMsg(
+                message="Could not create a workout: " + str(e)
+            )
 
     def get_all(
         self, user_id: int
@@ -87,13 +93,11 @@ class WorkoutRepository:
                     ]
                     return result
         except Exception as e:
-            return WorkoutErrorMsg(message="Error retrieving workouts")
+            return WorkoutErrorMsg(message="error!" + str(e))
 
-
-
-
-
-    def get_detail(self, workout_id: int, user_id: int) -> Optional[WorkoutOut]:
+    def get_detail(
+        self, workout_id: int, user_id: int
+    ) -> Optional[WorkoutOut]:
         try:
             with pool.connection() as conn:
                 with conn.cursor() as db:
@@ -113,7 +117,9 @@ class WorkoutRepository:
         except Exception as e:
             return WorkoutErrorMsg(message="error!" + str(e))
 
-    def update(self, workout_id: int, workout: WorkoutIn, user_id: int) -> Union[WorkoutOut, WorkoutErrorMsg]:
+    def update(
+        self, workout_id: int, workout: WorkoutIn, user_id: int
+    ) -> Union[WorkoutOut, WorkoutErrorMsg]:
         try:
             with pool.connection() as conn:
                 with conn.cursor() as db:
@@ -124,7 +130,12 @@ class WorkoutRepository:
                             , notes = %s
                         WHERE workout_id = %s AND user_id = %s
                         """,
-                        [workout.workout_date, workout.notes, workout_id, user_id],
+                        [
+                            workout.workout_date,
+                            workout.notes,
+                            workout_id,
+                            user_id,
+                        ],
                     )
                     return self.workout_in_to_out(workout_id, workout)
         except Exception as e:
