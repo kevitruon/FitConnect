@@ -99,9 +99,6 @@ class AccountRepository:
         except Exception as e:
             return AccountErrorMsg(message="error!" + str(e))
 
-
-
-
     def get_detail(self, user_id: int) -> Optional[AccountOut]:
         try:
             with pool.connection() as conn:

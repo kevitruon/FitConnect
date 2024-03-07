@@ -20,6 +20,7 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
+
 class AccountForm(BaseModel):
     username: str
     password: str
@@ -31,11 +32,6 @@ class AccountToken(Token):
 
 class HttpError(BaseModel):
     detail: str
-
-
-
-
-
 
 
 @router.get("/protected", response_model=bool)
