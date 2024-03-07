@@ -99,6 +99,9 @@ class AccountRepository:
         except Exception as e:
             return AccountErrorMsg(message="error!" + str(e))
 
+
+
+
     def get_detail(self, user_id: int) -> Optional[AccountOut]:
         try:
             with pool.connection() as conn:
@@ -170,7 +173,7 @@ class AccountRepository:
                     db.execute(
                         """
                         DELETE FROM users
-                        WHERE id = %s
+                        WHERE user_id = %s
                         """,
                         [user_id],
                     )
