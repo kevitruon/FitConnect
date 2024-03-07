@@ -18,6 +18,7 @@ from jwtdown_fastapi.authentication import Token
 from authenticator import authenticator
 from pydantic import BaseModel
 
+router = APIRouter()
 
 class AccountForm(BaseModel):
     username: str
@@ -32,7 +33,9 @@ class HttpError(BaseModel):
     detail: str
 
 
-router = APIRouter()
+
+
+
 
 
 @router.get("/protected", response_model=bool)
