@@ -32,7 +32,12 @@ class SetRepository:
                         VALUES
                             (%s, %s, %s, %s, %s)
                         RETURNING
-                            set_id, workout_id, exercise_id, set_number, weight, reps;
+                            set_id,
+                            workout_id,
+                            exercise_id,
+                            set_number,
+                            weight,
+                            reps;
                         """,
                         [
                             set.workout_id,

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Response, Request
+from fastapi import APIRouter, Depends
 from typing import List
 from queries.workout_comments import (
     WorkoutCommentIn,
