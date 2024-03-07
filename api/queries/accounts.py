@@ -41,47 +41,6 @@ class AccountRepository:
             hashed_password=record[3],
         )
 
-    # def create(
-    #     self, user: AccountIn, hashed_password: str
-    # ) -> AccountOutWithPassword:
-    #     try:
-    #         with pool.connection() as conn:
-    #             with conn.cursor() as db:
-    #                 params = [
-    #                     "CoolUser1",
-    #                     "Something1@gmail.com",
-    #                     hashed_password,
-    #                 ]
-    #                 print("Hashed PASS:", hashed_password)
-    #                 print("User is", user)
-    #                 result = db.execute(
-    #                     """
-    #                     INSERT INTO users (username, email, hashed_password)
-    #                     VALUES ("CoolUser1", "Something1@gmail.com", %s)
-    #                     RETURNING id, username, email, hashed_password;
-    #                     """,
-    #                     params,
-    #                 )
-    #                 user_id = result.fetchone()[0]
-    #                 print("AAAAAAAAAAAAAAAsdasdsasAAAAAAAAAAAAAAAA", user_id)
-    #                 coolVar = AccountOutWithPassword(
-    #                     id=user_id,
-    #                     username="CoolUser1",
-    #                     email="Something1@gmail.com",
-    #                     hashed_password=hashed_password,
-    #                 )
-    #                 print("COOLVAR", coolVar)
-    #                 return coolVar
-
-    #                 # return AccountOutWithPassword(
-    #                 #     id=user_id,
-    #                 #     username=user.username,
-    #                 #     email=user.email,
-    #                 #     hashed_password=hashed_password,
-    #                 # )
-
-    # except Exception:
-    #     return {"message": "Could not create a user"}
     def create(
         self, user: AccountIn, hashed_password: str
     ) -> AccountOutWithPassword:
