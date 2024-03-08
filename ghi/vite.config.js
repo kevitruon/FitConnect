@@ -7,5 +7,8 @@ export default defineConfig({
     server: {
         host: true,
         strictPort: true,
+        watch: {
+            interval: 100, // Increase the interval to 1 second
+        },
     },
 })
