@@ -14,7 +14,6 @@ class DuplicateAccountError(ValueError):
 class AccountIn(BaseModel):
     username: str
     email: str
-    email: str
     password: str
 
 
@@ -116,10 +115,10 @@ class AccountRepository:
         except Exception as e:
             return AccountErrorMsg(message="error!" + str(e))
 
-    def get(self, email: str) -> AccountOutWithPassword:
+    def get(self, username: str) -> AccountOutWithPassword:
         try:
             print("is trying get somehow?")
-            print("email", email)
+            print("username", username)
             with pool.connection() as conn:
                 with conn.cursor() as db:
                     result = db.execute(
@@ -130,9 +129,9 @@ class AccountRepository:
                         email,
                         hashed_password
                         FROM users
-                        WHERE email = %s;
+                        WHERE username = %s;
                         """,
-                        [email],
+                        [username],
                     )
                     record = result.fetchone()
                     if record is None:

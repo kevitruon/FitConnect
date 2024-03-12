@@ -11,12 +11,12 @@ from queries.accounts import (
 class AccountAuthenticator(Authenticator):
     async def get_account_data(
         self,
-        email: str,
+        username: str,
         accounts: AccountRepository,
     ):
         # Use your repo to get the account based on the
         # username (which could be an email)
-        return accounts.get(email)
+        return accounts.get(username)
 
     def get_account_getter(
         self,

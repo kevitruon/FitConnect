@@ -11,7 +11,6 @@ import ExerciseLibrary from './pages/ExerciseLibrary'
 import Friends from './pages/Friends'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
-
 function App() {
     return (
         <AuthProvider>

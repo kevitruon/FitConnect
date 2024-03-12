@@ -8,7 +8,7 @@ export default defineConfig({
         host: true,
         strictPort: true,
         watch: {
-            interval: 100, // Increase the interval to 1 second
+            usePolling: true,
         },
     },
 })

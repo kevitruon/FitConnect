@@ -1,7 +1,12 @@
 import React from 'react'
-
+import SignOut from './SignOut'
 function Dashboard() {
-    return <div>Dashboard</div>
+    return (
+        <div>
+            DASHBOARDLOL
+            <SignOut />
+        </div>
+    )
 }
 
 export default Dashboard
