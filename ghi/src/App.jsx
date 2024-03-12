@@ -11,14 +11,20 @@ import ExerciseLibrary from './pages/ExerciseLibrary'
 import Friends from './pages/Friends'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
+import Navbar from './pages/Navbar'
 function App() {
+    const API_HOST = import.meta.env.VITE_API_HOST
+
+    if (!API_HOST) {
+        throw new Error('VITE_API_HOST is not defined')
+    }
     return (
-        <AuthProvider>
+        <AuthProvider baseUrl={API_HOST}>
             <Router>
                 <div className="App">
                     {/* Add navigation component */}
                     <nav className="bg-gray-800">
-                        {/* Add navigation menu items */}
+                        <Navbar />
                     </nav>
 
                     <Routes>

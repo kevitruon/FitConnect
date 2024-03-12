@@ -1,62 +1,55 @@
-import useToken, { useAuthContext } from '@galvanize-inc/jwtdown-for-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import useToken, { useAuthContext } from '@galvanize-inc/jwtdown-for-react'
 
 const Login = () => {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
+    const [errorMessage, setErrorMessage] = useState('')
     const { login } = useToken()
-    const nav = useNavigate()
+    const navigate = useNavigate()
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
-        console.log(`username: ${username} password: ${password}`)
-        login(username, password)
-            .then((response) => {
-                console.log('Login successful', response)
-                nav('/')
-            })
-            .catch((error) => {
-                console.error('Login failed', error)
-            })
-        e.target.reset()
+        try {
+            const success = await login(username, password)
+            console.log('Login success:', success)
+            if (success) {
+                navigate('/')
+            } else {
+                setErrorMessage('Invalid username or password')
+            }
+        } catch (error) {
+            console.error('Login error:', error)
+            setErrorMessage('An error occurred during login')
+        }
     }
 
     return (
         <div>
-            <h5>Login</h5>
-            <div>
-                <form onSubmit={(e) => handleSubmit(e)}>
-                    <div>
-                        <input
-                            onChange={(e) => setUsername(e.target.value)}
-                            value={username}
-                            placeholder="Username"
-                            required
-                            type="text"
-                            id="username"
-                            name="username"
-                            className="form-control"
-                            autoFocus
-                        />{' '}
-                        <label htmlFor="username">Username</label>
-                    </div>
-                    <div>
-                        <input
-                            onChange={(e) => setPassword(e.target.value)}
-                            value={password}
-                            placeholder="Password"
-                            required
-                            type="password"
-                            name="password"
-                            id="password"
-                            className="form-control"
-                        />{' '}
-                        <label htmlFor="password">Password</label>
-                    </div>
-                    <button>Log In</button>
-                </form>
-            </div>
+            <h2>Login</h2>
+            {errorMessage && <p>{errorMessage}</p>}
+            <form onSubmit={(e) => handleSubmit(e)}>
+                <div>
+                    <label htmlFor="username">Username:</label>
+                    <input
+                        type="text"
+                        id="username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
+                </div>
+                <div>
+                    <label htmlFor="password">Password:</label>
+                    <input
+                        type="password"
+                        id="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                </div>
+                <button type="submit">Login</button>
+            </form>
         </div>
     )
 }
