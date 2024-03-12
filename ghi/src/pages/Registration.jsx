@@ -22,8 +22,10 @@ const Registration = () => {
             })
             console.log('Registration response:', response)
             if (response.ok) {
-                await login(username, password)
-                navigate('/')
+                let success = await login(username, password)
+                if (success) {
+                    navigate('/')
+                }
             } else {
                 setErrorMessage('Registration failed')
             }
