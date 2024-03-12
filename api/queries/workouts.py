@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from datetime import date
 from queries.pool import pool
 from typing import Union, Optional, List
+from queries.sets import SetIn, SetOut
 
 
 class WorkoutErrorMsg(BaseModel):
@@ -34,43 +35,57 @@ class WorkoutRepository:
             notes=record[3],
         )
 
-    def create(
-        self, workout: WorkoutIn, user_id: int
-    ) -> Union[WorkoutOut, WorkoutErrorMsg]:
+    async def create(
+        self, workout: WorkoutIn, sets: List[SetIn], user_id: int
+    ) -> WorkoutOut:
         try:
-            with pool.connection() as conn:
-                with conn.cursor() as cur:
-                    result = cur.execute(
+            async with pool.connection() as conn:
+                async with conn.cursor() as cur:
+                    await cur.execute(
                         """
-                        INSERT INTO workouts
-                            (user_id,
-                            workout_date,
-                            notes)
-                        VALUES
-                            (%s, %s, %s)
-                        RETURNING
-                        workout_id,
-                        user_id,
-                        workout_date,
-                        notes;
+                        INSERT INTO workouts (user_id, workout_date, notes)
+                        VALUES (%s, %s, %s)
+                        RETURNING workout_id;
                         """,
-                        [
-                            user_id,
-                            workout.workout_date,
-                            workout.notes,
-                        ],
+                        [user_id, workout.workout_date, workout.notes],
                     )
-                    id = result.fetchone()[0]
+                    workout_id = (await cur.fetchone())[0]
+
+                    set_values = []
+                    for set_data in sets:
+                        set_values.append(
+                            (workout_id,
+                             set_data.exercise_id,
+                             set_data.set_number,
+                             set_data.weight,
+                             set_data.reps)
+                        )
+                    await cur.executemany(
+                        """
+                        INSERT INTO sets (
+                            workout_id,
+                            exercise_id,
+                            set_number,
+                            weight,
+                            reps
+                            )
+                        VALUES (%s, %s, %s, %s, %s);
+                        """,
+                        set_values,
+                    )
+
                     return WorkoutOut(
-                        workout_id=id,
+                        workout_id=workout_id,
                         user_id=user_id,
                         workout_date=workout.workout_date,
                         notes=workout.notes,
+                        sets=[SetOut(
+                            **set_data.dict(),
+                            workout_id=workout_id) for set_data in sets],
                     )
         except Exception as e:
-            return WorkoutErrorMsg(
-                message="Could not create a workout: " + str(e)
-            )
+            print(e)
+            return None
 
     def get_all(
         self, user_id: int

@@ -7,10 +7,12 @@ import Registration from './pages/Registration'
 import Dashboard from './pages/Dashboard'
 import WorkoutLogging from './pages/WorkoutLogging'
 import WorkoutHistory from './pages/WorkoutHistory'
+import WorkoutDetail from './pages/WorkoutDetail' // Fix the import path
 import ExerciseLibrary from './pages/ExerciseLibrary'
 import Friends from './pages/Friends'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
+
 import Navbar from './pages/Navbar'
 function App() {
     const API_HOST = import.meta.env.VITE_API_HOST
@@ -27,7 +29,7 @@ function App() {
                         <Navbar />
                     </nav>
 
-                    <Routes>
+                    <Routes> {/* Correct the component name */}
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Registration />} />
@@ -39,6 +41,10 @@ function App() {
                         <Route
                             path="/workout-history"
                             element={<WorkoutHistory />}
+                        />
+                        <Route
+                            path="/workout-detail"
+                            element={<WorkoutDetail />}
                         />
                         <Route
                             path="/exercises"
