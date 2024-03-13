@@ -37,6 +37,7 @@ async def get_workout_detail(
     if result is None:
         response.status_code = 404
         return None
+        return None
     elif isinstance(result, WorkoutErrorMsg):
         response.status_code = 500
         return None

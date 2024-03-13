@@ -7,11 +7,12 @@ import Registration from './pages/Registration'
 import Dashboard from './pages/Dashboard'
 import WorkoutLogging from './pages/WorkoutLogging'
 import WorkoutHistory from './pages/WorkoutHistory'
-import WorkoutDetail from './pages/WorkoutDetail' // Fix the import path
+import WorkoutDetail from './pages/WorkoutDetail'
 import ExerciseLibrary from './pages/ExerciseLibrary'
 import Friends from './pages/Friends'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
+import UsersPage from './pages/UsersPage'
 
 import Navbar from './pages/Navbar'
 function App() {
@@ -24,12 +25,12 @@ function App() {
         <AuthProvider baseUrl={API_HOST}>
             <Router>
                 <div className="App">
-                    {/* Add navigation component */}
                     <nav className="bg-gray-800">
                         <Navbar />
                     </nav>
 
-                    <Routes> {/* Correct the component name */}
+                    <Routes>
+                        {' '}
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Registration />} />
@@ -53,12 +54,10 @@ function App() {
                         <Route path="/friends" element={<Friends />} />
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/settings" element={<Settings />} />
+                        <Route path="/find-friends" element={<UsersPage />} />
                     </Routes>
 
-                    {/* Add footer component */}
-                    <footer className="bg-gray-800 text-white py-4">
-                        {/* Add footer content */}
-                    </footer>
+                    <footer className="bg-gray-800 text-white py-4"></footer>
                 </div>
             </Router>
         </AuthProvider>
