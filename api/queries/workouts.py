@@ -20,6 +20,7 @@ class WorkoutOut(BaseModel):
     user_id: int
     workout_date: date
     notes: Optional[str] = None
+    sets: list[SetOut]
 
 
 class WorkoutRepository:
@@ -31,36 +32,52 @@ class WorkoutRepository:
         return WorkoutOut(
             workout_id=record[0],
             user_id=record[1],
-            workout_date=record[2].strftime("%Y-%m-%d"),
+            workout_date=record[2],
             notes=record[3],
         )
 
-    async def create(
-        self, workout: WorkoutIn, sets: List[SetIn], user_id: int
-    ) -> WorkoutOut:
+    def create(
+        self, workout: WorkoutIn, sets: SetIn, user_id: int
+    ) -> Optional[WorkoutOut]:
+        print("returned sets:")
         try:
-            async with pool.connection() as conn:
-                async with conn.cursor() as cur:
-                    await cur.execute(
+            with pool.connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
                         """
                         INSERT INTO workouts (user_id, workout_date, notes)
                         VALUES (%s, %s, %s)
                         RETURNING workout_id;
                         """,
-                        [user_id, workout.workout_date, workout.notes],
+                        [workout.user_id, workout.workout_date, workout.notes],
                     )
-                    workout_id = (await cur.fetchone())[0]
+                    workout_id = (cur.fetchone())[0]
 
                     set_values = []
                     for set_data in sets:
                         set_values.append(
-                            (workout_id,
-                             set_data.exercise_id,
-                             set_data.set_number,
-                             set_data.weight,
-                             set_data.reps)
+                            (
+                                workout_id,
+                                set_data["exercise_id"],
+                                set_data["set_number"],
+                                set_data["weight"],
+                                set_data["reps"],
+                            )
                         )
-                    await cur.executemany(
+
+                    set_dict_values = []
+                    for set_data in sets:
+                        set_dict_values.append(
+                            {
+                                "workout_id": workout_id,
+                                "exercise_id": set_data["exercise_id"],
+                                "set_number": set_data["set_number"],
+                                "weight": set_data["weight"],
+                                "reps": set_data["reps"],
+                            }
+                        )
+                    print("AAAAAAAAAA", set_dict_values)
+                    cur.executemany(
                         """
                         INSERT INTO sets (
                             workout_id,
@@ -73,15 +90,19 @@ class WorkoutRepository:
                         """,
                         set_values,
                     )
+                    for set_data in set_dict_values:
+                        print("SET DATA", set_data)
+                    sets_list = [
+                        SetOut(**set_data) for set_data in set_dict_values
+                    ]
 
+                    print("SET LIST", sets_list)
                     return WorkoutOut(
                         workout_id=workout_id,
                         user_id=user_id,
                         workout_date=workout.workout_date,
                         notes=workout.notes,
-                        sets=[SetOut(
-                            **set_data.dict(),
-                            workout_id=workout_id) for set_data in sets],
+                        sets=sets_list,
                     )
         except Exception as e:
             print(e)
@@ -95,45 +116,78 @@ class WorkoutRepository:
                 with conn.cursor() as db:
                     db.execute(
                         """
-                        SELECT workout_id, user_id, workout_date, notes
-                        FROM workouts
-                        WHERE user_id = %s
-                        ORDER BY workout_id;
+                        SELECT
+                            w.workout_id,
+                            w.user_id,
+                            w.workout_date,
+                            w.notes,
+                            s.set_id,
+                            s.exercise_id,
+                            s.set_number,
+                            s.weight,
+                            s.reps
+                        FROM workouts w
+                        LEFT JOIN sets s ON w.workout_id = s.workout_id
+                        WHERE w.user_id = %s
+                        ORDER BY w.workout_id, s.set_id;
                         """,
                         [user_id],
                     )
-                    result = [
-                        self.record_to_workout_out(record)
-                        for record in db.fetchall()
-                    ]
-                    return result
-        except Exception as e:
-            return WorkoutErrorMsg(message="error!" + str(e))
+                    rows = db.fetchall()
+                    workouts = []
+                    current_workout = None
 
-    def get_detail(
-        self, workout_id: int, user_id: int
-    ) -> Optional[WorkoutOut]:
-        try:
-            with pool.connection() as conn:
-                with conn.cursor() as db:
-                    result = db.execute(
-                        """
-                        SELECT workout_id, user_id, workout_date, notes
-                        FROM workouts
-                        WHERE workout_id = %s AND user_id = %s
-                        """,
-                        [workout_id, user_id],
-                    )
-                    record = result.fetchone()
-                    if record:
-                        return self.record_to_workout_out(record)
-                    else:
-                        return None
+                    for row in rows:
+                        (
+                            workout_id,
+                            user_id,
+                            workout_date,
+                            notes,
+                            set_id,
+                            exercise_id,
+                            set_number,
+                            weight,
+                            reps,
+                        ) = row
+
+                        if (
+                            current_workout is None
+                            or current_workout.workout_id != workout_id
+                        ):
+                            if current_workout is not None:
+                                workouts.append(current_workout)
+                            current_workout = WorkoutOut(
+                                workout_id=workout_id,
+                                user_id=user_id,
+                                workout_date=workout_date,
+                                notes=notes,
+                                sets=[],
+                            )
+
+                        if set_id is not None:
+                            set_out = SetOut(
+                                set_id=set_id,
+                                workout_id=workout_id,
+                                exercise_id=exercise_id,
+                                set_number=set_number,
+                                weight=weight,
+                                reps=reps,
+                            )
+                            current_workout.sets.append(set_out)
+
+                    if current_workout is not None:
+                        workouts.append(current_workout)
+
+                    return workouts
         except Exception as e:
             return WorkoutErrorMsg(message="error!" + str(e))
 
     def update(
-        self, workout_id: int, workout: WorkoutIn, user_id: int
+        self,
+        workout_id: int,
+        workout: WorkoutIn,
+        sets: List[dict],
+        user_id: int,
     ) -> Union[WorkoutOut, WorkoutErrorMsg]:
         try:
             with pool.connection() as conn:
@@ -141,9 +195,8 @@ class WorkoutRepository:
                     db.execute(
                         """
                         UPDATE workouts
-                        SET workout_date = %s
-                            , notes = %s
-                        WHERE workout_id = %s AND user_id = %s
+                        SET workout_date = %s, notes = %s
+                        WHERE workout_id = %s AND user_id = %s;
                         """,
                         [
                             workout.workout_date,
@@ -152,9 +205,134 @@ class WorkoutRepository:
                             user_id,
                         ],
                     )
-                    return self.workout_in_to_out(workout_id, workout)
+
+                    db.execute(
+                        """
+                        DELETE FROM sets
+                        WHERE workout_id = %s;
+                        """,
+                        [workout_id],
+                    )
+
+                    set_values = [
+                        (
+                            workout_id,
+                            set_data["exercise_id"],
+                            set_data["set_number"],
+                            set_data["weight"],
+                            set_data["reps"],
+                        )
+                        for set_data in sets
+                    ]
+                    db.executemany(
+                        """
+                        INSERT INTO sets
+                        (workout_id, exercise_id, set_number, weight, reps)
+                        VALUES (%s, %s, %s, %s, %s);
+                        """,
+                        set_values,
+                    )
+
+                    db.execute(
+                        """
+                        SELECT
+                            w.workout_id,
+                            w.user_id,
+                            w.workout_date,
+                            w.notes,
+                            s.set_id,
+                            s.exercise_id,
+                            s.set_number,
+                            s.weight,
+                            s.reps
+                        FROM workouts w
+                        LEFT JOIN sets s ON w.workout_id = s.workout_id
+                        WHERE w.workout_id = %s;
+                        """,
+                        [workout_id],
+                    )
+                    rows = db.fetchall()
+
+                    updated_workout = WorkoutOut(
+                        workout_id=rows[0][0],
+                        user_id=rows[0][1],
+                        workout_date=rows[0][2],
+                        notes=rows[0][3],
+                        sets=[
+                            SetOut(
+                                set_id=row[4],
+                                workout_id=row[0],
+                                exercise_id=row[5],
+                                set_number=row[6],
+                                weight=row[7],
+                                reps=row[8],
+                            )
+                            for row in rows
+                            if row[4] is not None
+                        ],
+                    )
+
+                    return updated_workout
         except Exception as e:
+            print(e)
             return WorkoutErrorMsg(message="error! " + str(e))
+
+    def get_detail(
+        self, workout_id: int, user_id: int
+    ) -> Optional[WorkoutOut]:
+        try:
+            with pool.connection() as conn:
+                with conn.cursor() as db:
+                    db.execute(
+                        """
+                        SELECT
+                            w.workout_id,
+                            w.user_id,
+                            w.workout_date,
+                            w.notes,
+                            s.set_id,
+                            s.exercise_id,
+                            s.set_number,
+                            s.weight,
+                            s.reps
+                        FROM workouts w
+                        LEFT JOIN sets s ON w.workout_id = s.workout_id
+                        WHERE w.workout_id = %s AND w.user_id = %s
+                        ORDER BY s.set_id;
+                        """,
+                        [workout_id, user_id],
+                    )
+                    rows = db.fetchall()
+
+                    if not rows:
+                        return None
+
+                    workout_data = rows[0]
+                    workout = WorkoutOut(
+                        workout_id=workout_data[0],
+                        user_id=workout_data[1],
+                        workout_date=workout_data[2],
+                        notes=workout_data[3],
+                        sets=[],
+                    )
+
+                    for row in rows:
+                        set_id, exercise_id, set_number, weight, reps = row[4:]
+                        if set_id is not None:
+                            set_out = SetOut(
+                                set_id=set_id,
+                                workout_id=workout_id,
+                                exercise_id=exercise_id,
+                                set_number=set_number,
+                                weight=weight,
+                                reps=reps,
+                            )
+                            workout.sets.append(set_out)
+
+                    return workout
+        except Exception as e:
+            print(e)
+            return None
 
     def delete(self, workout_id: int, user_id: int) -> bool:
         try:
@@ -162,8 +340,15 @@ class WorkoutRepository:
                 with conn.cursor() as db:
                     db.execute(
                         """
+                        DELETE FROM sets
+                        WHERE workout_id = %s;
+                        """,
+                        [workout_id],
+                    )
+                    db.execute(
+                        """
                         DELETE FROM workouts
-                        WHERE workout_id = %s AND user_id = %s
+                        WHERE workout_id = %s AND user_id = %s;
                         """,
                         [workout_id, user_id],
                     )
