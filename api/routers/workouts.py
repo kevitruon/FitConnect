@@ -7,12 +7,13 @@ from queries.workouts import (
     WorkoutErrorMsg,
 )
 from authenticator import authenticator
+from routers.sets import SetIn
 
 router = APIRouter()
 
 
 @router.get("/workouts", response_model=List[WorkoutOut] | WorkoutErrorMsg)
-async def get_workouts(
+async def get_all_workouts(
     request: Request,
     account_data: dict = Depends(authenticator.get_current_account_data),
     repo: WorkoutRepository = Depends(),
@@ -48,15 +49,25 @@ async def get_workout_detail(
 @router.post("/workouts", response_model=WorkoutOut | WorkoutErrorMsg)
 async def create_workout(
     workout: WorkoutIn,
+    sets: List[SetIn],
     request: Request,
     response: Response,
     repo: WorkoutRepository = Depends(),
     account_data: dict = Depends(authenticator.get_current_account_data),
 ) -> WorkoutOut | WorkoutErrorMsg:
-    user_id = account_data["id"]
-    created_workout = repo.create(workout, user_id)
+    sets_data = [set_in.dict() for set_in in sets]
+    # print("Received workout data:", workout.workout_date)
+    # print("Received sets data:", sets_data)
+
+    user_id = int(account_data["id"])
+    # print("User id:", user_id)
+    created_workout = repo.create(
+        workout=workout, sets=sets_data, user_id=user_id
+    )
+    print("Created workout:", created_workout)
     if isinstance(created_workout, WorkoutErrorMsg):
         response.status_code = 400
+
     return created_workout
 
 

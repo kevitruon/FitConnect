@@ -1,10 +1,10 @@
 from pydantic import BaseModel
 from queries.pool import pool
-from typing import List, Union
+from typing import List, Union, Optional
 
 
 class SetIn(BaseModel):
-    workout_id: int
+    # workout_id: int
     exercise_id: int
     set_number: int
     weight: float
@@ -12,7 +12,7 @@ class SetIn(BaseModel):
 
 
 class SetOut(BaseModel):
-    set_id: int
+    set_id: Optional[int]
     workout_id: int
     exercise_id: int
     set_number: int
