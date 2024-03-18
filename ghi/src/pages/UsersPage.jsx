@@ -30,7 +30,6 @@ const UserPage = () => {
                 const allUsers = await fetchWithCookie(
                     'http://localhost:8000/users'
                 )
-                const nonFriends = friendshipsData.filter((friendship) => {})
 
                 const availableUsers = allUsers.filter(
                     (user) =>

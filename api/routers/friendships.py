@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, Depends
-from jwtdown_fastapi.authentication import Token
 from queries.friendships import FriendshipRepository
 from queries.accounts import AccountRepository
 from queries.friendships import FriendshipIn, FriendshipOut

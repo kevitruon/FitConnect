@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from queries.pool import pool
-from typing import Union, Optional, List
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -33,9 +33,15 @@ class FriendshipRepository:
             with conn.cursor() as db:
                 db.execute(
                     """
-                    INSERT INTO friendships (sender_id, recipient_id)
+                    INSERT INTO friendships
+                        (sender_id, recipient_id)
                     VALUES (%s, %s)
-                    RETURNING friendship_id, sender_id, recipient_id, status, created_at;
+                    RETURNING
+                        friendship_id,
+                        sender_id,
+                        recipient_id,
+                        status,
+                        created_at;
                     """,
                     [sender_id, recipient_id],
                 )
@@ -64,10 +70,17 @@ class FriendshipRepository:
             with conn.cursor() as db:
                 db.execute(
                     """
-                    SELECT friendship_id, sender_id, recipient_id, status, created_at
+                    SELECT
+                        friendship_id,
+                        sender_id,
+                        recipient_id,
+                        status,
+                        created_at
                     FROM friendships
-                    WHERE (sender_id = %s AND recipient_id = %s)
-                    OR (sender_id = %s AND recipient_id = %s);
+                    WHERE
+                        (sender_id = %s AND recipient_id = %s)
+                    OR
+                        (sender_id = %s AND recipient_id = %s);
                     """,
                     [sender_id, recipient_id, recipient_id, sender_id],
                 )
@@ -89,12 +102,17 @@ class FriendshipRepository:
                     )
                 return None
 
-    def get_friendships(self, user_id: int) -> list[FriendshipOut]:
+    def get_friendships(self, user_id: int) -> List[FriendshipOut]:
         with pool.connection() as conn:
             with conn.cursor() as db:
                 db.execute(
                     """
-                    SELECT friendship_id, sender_id, recipient_id, status, created_at
+                    SELECT
+                        friendship_id,
+                        sender_id,
+                        recipient_id,
+                        status,
+                        created_at
                     FROM friendships
                     WHERE sender_id = %s OR recipient_id = %s;
                     """,
@@ -133,7 +151,12 @@ class FriendshipRepository:
                     WHERE friendship_id = %s
                     AND recipient_id = %s
                     AND status = 'pending'
-                    RETURNING friendship_id, sender_id, recipient_id, status, created_at;
+                    RETURNING
+                        friendship_id,
+                        sender_id,
+                        recipient_id,
+                        status,
+                        created_at;
                     """,
                     [friendship_id, user_id],
                 )
@@ -167,7 +190,12 @@ class FriendshipRepository:
                     WHERE friendship_id = %s
                     AND recipient_id = %s
                     AND status = 'pending'
-                    RETURNING friendship_id, sender_id, recipient_id, status, created_at;
+                    RETURNING
+                        friendship_id,
+                        sender_id,
+                        recipient_id,
+                        status,
+                        created_at;
                     """,
                     [friendship_id, user_id],
                 )
