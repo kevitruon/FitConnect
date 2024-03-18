@@ -47,6 +47,9 @@ const Navbar = () => {
                 <li>
                     <Link to="/find-friends">Find Friends</Link>
                 </li>
+                <li>
+                    <Link to="/workout-history">Workout History</Link>
+                </li>
             </ul>
             {token && userData ? (
                 <div>

@@ -52,7 +52,6 @@ class WorkoutRepository:
                         [workout.user_id, workout.workout_date, workout.notes],
                     )
                     workout_id = (cur.fetchone())[0]
-
                     set_values = []
                     for set_data in sets:
                         set_values.append(
@@ -64,7 +63,6 @@ class WorkoutRepository:
                                 set_data["reps"],
                             )
                         )
-
                     set_dict_values = []
                     for set_data in sets:
                         set_dict_values.append(

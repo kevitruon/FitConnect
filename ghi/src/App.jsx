@@ -7,7 +7,8 @@ import Registration from './pages/Registration'
 import Dashboard from './pages/Dashboard'
 import WorkoutLogging from './pages/WorkoutLogging'
 import WorkoutHistory from './pages/WorkoutHistory'
-import WorkoutDetail from './pages/WorkoutDetail'
+import WorkoutDetail from './pages/WorkoutDetail' // Fix the import path
+import UpdateWorkout from './pages/WorkoutUpdate'
 import ExerciseLibrary from './pages/ExerciseLibrary'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
@@ -43,8 +44,12 @@ function App() {
                             element={<WorkoutHistory />}
                         />
                         <Route
-                            path="/workout-detail"
+                            path="/workouts/:id"
                             element={<WorkoutDetail />}
+                        />
+                        <Route
+                            path="/workouts/:workoutId/update"
+                            element={<UpdateWorkout />}
                         />
                         <Route
                             path="/exercises"

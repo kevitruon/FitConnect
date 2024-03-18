@@ -39,7 +39,10 @@ function ListWorkouts() {
       });
       if (response.ok) {
         // Remove the deleted workout from the list
+        const deletedWorkout = workouts.find(workout => workout.workout_id !== workoutId);
+        console.log('deleted workout:', deletedWorkout);
         setWorkouts(workouts.filter(workout => workout.workout_id !== workoutId));
+        
       } else {
         console.error('Failed to delete workout');
       }
@@ -47,6 +50,13 @@ function ListWorkouts() {
       console.error('Failed to delete workout:', error);
     }
   };
+
+  const handleUpdateWorkout = () => {
+    console.log('Update Workout button clicked');
+    if (workouts.workout) {
+      navigate(`/workouts/${workouts.workout.workout.id}/update`)
+    }
+  }
 
   return (
     <div className="max-w-md mx-auto mt-10">
@@ -58,11 +68,24 @@ function ListWorkouts() {
             <p className="text-sm">Notes: {workout.notes}</p>
             <div className="flex justify-between items-center mt-2">
               <button
-                onClick={() => navigate(`/workout/${workout.workout_id}`)}
+                onClick={() => navigate(`/workouts/${workout.workout_id}`)}
+                
                 className="bg-blue-500 text-white px-3 py-1 rounded"
               >
                 View Workout
               </button>
+
+              <button
+                onClick={() => navigate(`/workouts/${workout.workout_id}/update`)}
+                className="bg-yellow-500 text-white px-3 py-1 rounded"
+              >
+                Update Workout
+              </button> 
+
+
+
+
+
               <button
                 onClick={() => handleDeleteWorkout(workout.workout_id)}
                 className="bg-red-500 text-white px-3 py-1 rounded"

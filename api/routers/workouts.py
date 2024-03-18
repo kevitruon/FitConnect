@@ -56,18 +56,12 @@ async def create_workout(
     account_data: dict = Depends(authenticator.get_current_account_data),
 ) -> WorkoutOut | WorkoutErrorMsg:
     sets_data = [set_in.dict() for set_in in sets]
-    # print("Received workout data:", workout.workout_date)
-    # print("Received sets data:", sets_data)
-
     user_id = int(account_data["id"])
-    # print("User id:", user_id)
     created_workout = repo.create(
         workout=workout, sets=sets_data, user_id=user_id
     )
-    print("Created workout:", created_workout)
     if isinstance(created_workout, WorkoutErrorMsg):
         response.status_code = 400
-
     return created_workout
 
 
@@ -77,13 +71,15 @@ async def create_workout(
 async def update_workout(
     workout_id: int,
     workout: WorkoutIn,
+    sets: List[SetIn],
     request: Request,
     response: Response,
     repo: WorkoutRepository = Depends(),
     account_data: dict = Depends(authenticator.get_current_account_data),
 ) -> WorkoutOut | WorkoutErrorMsg:
-    user_id = account_data["id"]
-    updated_workout = repo.update(workout_id, workout, user_id)
+    sets_data = [set_in.dict() for set_in in sets]
+    user_id = int(account_data["id"])
+    updated_workout = repo.update(workout_id, workout, sets_data, user_id)
     if isinstance(updated_workout, WorkoutErrorMsg):
         response.status_code = 400
     return updated_workout
@@ -97,6 +93,8 @@ async def delete_workout(
     repo: WorkoutRepository = Depends(),
     account_data: dict = Depends(authenticator.get_current_account_data),
 ) -> bool:
-    user_id = account_data["id"]
+    user_id = int(account_data["id"])
     success = repo.delete(workout_id, user_id)
+    if not success:
+        response.status_code = 404
     return success

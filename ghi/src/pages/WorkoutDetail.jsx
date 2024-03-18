@@ -7,10 +7,14 @@ function WorkoutDetail() {
   const { id } = useParams();
   const [workout, setWorkout] = useState(null);
 
+
+  console.log('Type of id:', typeof id); // Log the type of id
   useEffect(() => {
+    console.log('ID:', id)
     const fetchWorkoutDetail = async () => {
       try {
         const response = await fetch(`http://localhost:8000/workouts/${id}`, { // Use id directly in the URL
+        
           headers: {
             Authorization: `Bearer ${token}`,
           },
