@@ -3,7 +3,7 @@ import useToken from '@galvanize-inc/jwtdown-for-react'
 
 const Profile = () => {
     const [userWorkouts, setUserWorkouts] = useState([])
-    const { accessToken } = useToken()
+    const { token } = useToken()
 
     useEffect(() => {
         const fetchUserWorkouts = async () => {
@@ -12,7 +12,7 @@ const Profile = () => {
                     'http://localhost:8000/api/workouts',
                     {
                         headers: {
-                            Authorization: `Bearer ${accessToken}`,
+                            Authorization: `Bearer ${token}`,
                         },
                     }
                 )
@@ -27,10 +27,10 @@ const Profile = () => {
             }
         }
 
-        if (accessToken) {
+        if (token) {
             fetchUserWorkouts()
         }
-    }, [accessToken])
+    }, [token])
 
     return (
         <div>

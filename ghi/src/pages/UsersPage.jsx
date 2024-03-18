@@ -1,31 +1,53 @@
 import React, { useState, useEffect } from 'react'
 import useToken from '@galvanize-inc/jwtdown-for-react'
 
-const UsersPage = () => {
+const UserPage = () => {
     const [searchQuery, setSearchQuery] = useState('')
     const [users, setUsers] = useState([])
-    const { accessToken, account } = useToken()
-    const {account}
+    const [currentUser, setCurrentUser] = useState(null)
+    const [friendships, setFriendships] = useState([])
+    const { fetchWithCookie, token } = useToken()
 
     useEffect(() => {
-        fetchUsers()
-    }, [])
+        fetchData()
+    }, [token])
 
-    const fetchUsers = async () => {
+    const fetchData = async () => {
         try {
-            const response = await fetch('http://localhost:8000/users', {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            })
-            if (response.ok) {
-                const data = await response.json()
-                setUsers(data)
-            } else {
-                console.error('Failed to fetch users')
+            if (token) {
+                const userData = await fetchWithCookie(
+                    'http://localhost:8000/token'
+                )
+                if (userData && userData.account) {
+                    setCurrentUser(userData.account)
+                }
+
+                const friendshipsData = await fetchWithCookie(
+                    `http://localhost:8000/friendships`
+                )
+                setFriendships(friendshipsData)
+
+                const allUsers = await fetchWithCookie(
+                    'http://localhost:8000/users'
+                )
+                const nonFriends = friendshipsData.filter((friendship) => {})
+
+                const availableUsers = allUsers.filter(
+                    (user) =>
+                        user.id !== userData.account.id &&
+                        !friendshipsData.some(
+                            (friendship) =>
+                                friendship.recipient_id == user.id ||
+                                friendship.sender_id == user.id
+                        )
+                )
+                console.log('UserData:', userData)
+                console.log('FriendshipData:', friendshipsData)
+                console.log('Available users:', availableUsers)
+                setUsers(availableUsers)
             }
         } catch (error) {
-            console.error('Error fetching users:', error)
+            console.error('Error fetching data:', error)
         }
     }
 
@@ -33,30 +55,25 @@ const UsersPage = () => {
         setSearchQuery(event.target.value)
     }
 
-    const filteredUsers = users.filter(
-        (user) =>
-            user.username.toLowerCase().includes(searchQuery.toLowerCase()) &&
-            user.id !== account?.id
+    const filteredUsers = users.filter((user) =>
+        user.username.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
-    const handleAddFriend = async (friendId) => {
+    const handleAddFriend = async (recipientId) => {
         try {
-            const response = await fetch('http://localhost:8000/friendships', {
+            await fetch('http://localhost:8000/friendships', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${accessToken}`,
+                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    user_id: account?.id,
-                    friend_id: friendId,
+                    sender_id: currentUser.id,
+                    recipient_id: recipientId,
                 }),
             })
-            if (response.ok) {
-                console.log('Friend request sent')
-            } else {
-                console.error('Failed to send friend request')
-            }
+            console.log('Friend request sent')
+            fetchData() // Refresh data after sending a friend request
         } catch (error) {
             console.error('Error sending friend request:', error)
         }
@@ -87,4 +104,4 @@ const UsersPage = () => {
     )
 }
 
-export default UsersPage
+export default UserPage

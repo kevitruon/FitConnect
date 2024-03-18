@@ -9,7 +9,6 @@ import WorkoutLogging from './pages/WorkoutLogging'
 import WorkoutHistory from './pages/WorkoutHistory'
 import WorkoutDetail from './pages/WorkoutDetail'
 import ExerciseLibrary from './pages/ExerciseLibrary'
-import Friends from './pages/Friends'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import UsersPage from './pages/UsersPage'
@@ -51,7 +50,6 @@ function App() {
                             path="/exercises"
                             element={<ExerciseLibrary />}
                         />
-                        <Route path="/friends" element={<Friends />} />
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="/find-friends" element={<UsersPage />} />

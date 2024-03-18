@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from queries.pool import pool
-from typing import Union, Optional
-import datetime as dt
+from typing import Union, Optional, List
+from datetime import datetime
 
 
 class FriendshipErrorMsg(BaseModel):
@@ -13,240 +13,193 @@ class DuplicateFriendshipError(ValueError):
 
 
 class FriendshipIn(BaseModel):
-    user_id: int
-    friend_id: int
+    sender_id: int
+    recipient_id: int
 
 
 class FriendshipOut(BaseModel):
     friendship_id: int
-    user_id: int
-    friend_id: int
+    sender_id: int
+    recipient_id: int
     status: str
-    date_requested: dt.datetime
-    date_accepted: Optional[dt.datetime]
+    created_at: datetime
 
 
-class FriendshipRepo(BaseModel):
-    def record_to_friendship_out(self, record):
-        return FriendshipOut(
-            friendship_id=record[0],
-            user_id=record[1],
-            friend_id=record[2],
-            status=record[3],
-            date_requested=record[4],
-            date_accepted=record[5],
-        )
-
-    def create(self, friendship: FriendshipIn) -> FriendshipOut:
-        try:
-            with pool.connection() as conn:
-                with conn.cursor() as cur:
-                    result = cur.execute(
-                        """
-                        INSERT INTO friendships
-                            (user1_id, user2_id)
-                        VALUES
-                            (%s, %s)
-                        RETURNING
-                            friendship_id,
-                            user1_id,
-                            user2_id,
-                            status,
-                            date_requested,
-                            date_accepted;
-                        """,
-                        [friendship.user_id, friendship.friend_id],
+class FriendshipRepository:
+    def create_friendship(
+        self, sender_id: int, recipient_id: int
+    ) -> FriendshipOut:
+        with pool.connection() as conn:
+            with conn.cursor() as db:
+                db.execute(
+                    """
+                    INSERT INTO friendships (sender_id, recipient_id)
+                    VALUES (%s, %s)
+                    RETURNING friendship_id, sender_id, recipient_id, status, created_at;
+                    """,
+                    [sender_id, recipient_id],
+                )
+                record = db.fetchone()
+                if record:
+                    (
+                        friendship_id,
+                        sender_id,
+                        recipient_id,
+                        status,
+                        created_at,
+                    ) = record
+                    return FriendshipOut(
+                        friendship_id=friendship_id,
+                        sender_id=sender_id,
+                        recipient_id=recipient_id,
+                        status=status,
+                        created_at=created_at,
                     )
-                    record = result.fetchone()
-                    return self.record_to_friendship_out(record)
-        except Exception as e:
-            if "duplicate key value violates unique constraint" in str(e):
-                raise DuplicateFriendshipError("Friendship already exists")
-            raise FriendshipErrorMsg(message="error!" + str(e))
+                return None
 
-    def get(self, friendship_id: int) -> FriendshipOut:
-        try:
-            with pool.connection() as conn:
-                with conn.cursor() as db:
-                    result = db.execute(
-                        """
-                        SELECT
-                            friendship_id,
-                            user1_id, user2_id,
-                            status,
-                            date_requested,
-                            date_accepted
-                        FROM friendships
-                        WHERE friendship_id = %s
-                        """,
-                        [friendship_id],
+    def get_friendship(
+        self, sender_id: int, recipient_id: int
+    ) -> Optional[FriendshipOut]:
+        with pool.connection() as conn:
+            with conn.cursor() as db:
+                db.execute(
+                    """
+                    SELECT friendship_id, sender_id, recipient_id, status, created_at
+                    FROM friendships
+                    WHERE (sender_id = %s AND recipient_id = %s)
+                    OR (sender_id = %s AND recipient_id = %s);
+                    """,
+                    [sender_id, recipient_id, recipient_id, sender_id],
+                )
+                record = db.fetchone()
+                if record:
+                    (
+                        friendship_id,
+                        sender_id,
+                        recipient_id,
+                        status,
+                        created_at,
+                    ) = record
+                    return FriendshipOut(
+                        friendship_id=friendship_id,
+                        sender_id=sender_id,
+                        recipient_id=recipient_id,
+                        status=status,
+                        created_at=created_at,
                     )
-                    record = result.fetchone()
-                    if record:
-                        return self.record_to_friendship_out(record)
-                    else:
-                        raise FriendshipErrorMsg(
-                            message="Friendship not found"
+                return None
+
+    def get_friendships(self, user_id: int) -> list[FriendshipOut]:
+        with pool.connection() as conn:
+            with conn.cursor() as db:
+                db.execute(
+                    """
+                    SELECT friendship_id, sender_id, recipient_id, status, created_at
+                    FROM friendships
+                    WHERE sender_id = %s OR recipient_id = %s;
+                    """,
+                    [user_id, user_id],
+                )
+                records = db.fetchall()
+                friendships = []
+                for record in records:
+                    (
+                        friendship_id,
+                        sender_id,
+                        recipient_id,
+                        status,
+                        created_at,
+                    ) = record
+                    friendships.append(
+                        FriendshipOut(
+                            friendship_id=friendship_id,
+                            sender_id=sender_id,
+                            recipient_id=recipient_id,
+                            status=status,
+                            created_at=created_at,
                         )
-        except Exception as e:
-            raise FriendshipErrorMsg(message="error!" + str(e))
-
-    def get_all(
-        self, user_id: int
-    ) -> Union[list[FriendshipOut], FriendshipErrorMsg]:
-        try:
-            with pool.connection() as conn:
-                with conn.cursor() as db:
-                    db.execute(
-                        """
-                        SELECT
-                            friendship_id,
-                            user1_id,
-                            user2_id,
-                            status,
-                            date_requested,
-                            date_accepted
-                        FROM
-                            friendships
-                        WHERE
-                            user1_id = %s OR user2_id = %s
-                        ORDER BY
-                            friendship_id;
-                        """,
-                        [user_id, user_id],
                     )
-                    result = [
-                        self.record_to_friendship_out(record)
-                        for record in db.fetchall()
-                    ]
-                    print("Result from get_all:", result)  # Print the result
-                    return result
-        except Exception as e:
-            return FriendshipErrorMsg(message="error!" + str(e))
+                return friendships
 
-    def set_pending(
-        self, friendship_id: int
-    ) -> Union[FriendshipOut, FriendshipErrorMsg]:
-        try:
-            with pool.connection() as conn:
-                with conn.cursor() as db:
-                    db.execute(
-                        """
-                        UPDATE friendships
-                        SET
-                            status = 'pending',
-                            date_accepted = NULL
-                        WHERE
-                            friendship_id = %s
-                        RETURNING
-                            friendship_id,
-                            user1_id,
-                            user2_id,
-                            status,
-                            date_requested,
-                            date_accepted;
-                        """,
-                        [friendship_id],
+    def accept_friendship(
+        self, friendship_id: int, user_id: int
+    ) -> Optional[FriendshipOut]:
+        with pool.connection() as conn:
+            with conn.cursor() as db:
+                db.execute(
+                    """
+                    UPDATE friendships
+                    SET status = 'accepted'
+                    WHERE friendship_id = %s
+                    AND recipient_id = %s
+                    AND status = 'pending'
+                    RETURNING friendship_id, sender_id, recipient_id, status, created_at;
+                    """,
+                    [friendship_id, user_id],
+                )
+                record = db.fetchone()
+                if record:
+                    (
+                        friendship_id,
+                        sender_id,
+                        recipient_id,
+                        status,
+                        created_at,
+                    ) = record
+                    return FriendshipOut(
+                        friendship_id=friendship_id,
+                        sender_id=sender_id,
+                        recipient_id=recipient_id,
+                        status=status,
+                        created_at=created_at,
                     )
-                    record = db.fetchone()
-                    if record:
-                        return self.record_to_friendship_out(record)
-                    else:
-                        return FriendshipErrorMsg(
-                            message="Friendship not found"
-                        )
-        except Exception as e:
-            return FriendshipErrorMsg(message="error!" + str(e))
+                return None
 
-    def set_accepted(
-        self, friendship_id: int
-    ) -> Union[FriendshipOut, FriendshipErrorMsg]:
-        try:
-            with pool.connection() as conn:
-                with conn.cursor() as db:
-                    db.execute(
-                        """
-                        UPDATE
-                            friendships
-                        SET
-                            status = 'accepted',
-                            date_accepted = NOW()
-                        WHERE
-                            friendship_id = %s
-                        RETURNING
-                            friendship_id,
-                            user1_id,
-                            user2_id,
-                            status,
-                            date_requested,
-                            date_accepted;
-                        """,
-                        [friendship_id],
+    def reject_friendship(
+        self, friendship_id: int, user_id: int
+    ) -> Optional[FriendshipOut]:
+        with pool.connection() as conn:
+            with conn.cursor() as db:
+                db.execute(
+                    """
+                    UPDATE friendships
+                    SET status = 'rejected'
+                    WHERE friendship_id = %s
+                    AND recipient_id = %s
+                    AND status = 'pending'
+                    RETURNING friendship_id, sender_id, recipient_id, status, created_at;
+                    """,
+                    [friendship_id, user_id],
+                )
+                record = db.fetchone()
+                if record:
+                    (
+                        friendship_id,
+                        sender_id,
+                        recipient_id,
+                        status,
+                        created_at,
+                    ) = record
+                    return FriendshipOut(
+                        friendship_id=friendship_id,
+                        sender_id=sender_id,
+                        recipient_id=recipient_id,
+                        status=status,
+                        created_at=created_at,
                     )
-                    record = db.fetchone()
-                    if record:
-                        return self.record_to_friendship_out(record)
-                    else:
-                        return FriendshipErrorMsg(
-                            message="Friendship not found"
-                        )
-        except Exception as e:
-            return FriendshipErrorMsg(message="error!" + str(e))
+                return None
 
-    def set_rejected(
-        self, friendship_id: int
-    ) -> Union[FriendshipOut, FriendshipErrorMsg]:
-        try:
-            with pool.connection() as conn:
-                with conn.cursor() as db:
-                    db.execute(
-                        """
-                        UPDATE
-                            friendships
-                        SET
-                            status = 'rejected',
-                            date_accepted = NULL
-                        WHERE
-                            friendship_id = %s
-                        RETURNING
-                            friendship_id,
-                            user1_id,
-                            user2_id,
-                            status,
-                            date_requested,
-                            date_accepted;
-                        """,
-                        [friendship_id],
-                    )
-                    record = db.fetchone()
-                    if record:
-                        return self.record_to_friendship_out(record)
-                    else:
-                        return FriendshipErrorMsg(
-                            message="Friendship not found"
-                        )
-        except Exception as e:
-            return FriendshipErrorMsg(message="error!" + str(e))
-
-    def delete(self, friendship_id: int) -> Union[bool, FriendshipErrorMsg]:
-        try:
-            with pool.connection() as conn:
-                with conn.cursor() as db:
-                    db.execute(
-                        """
-                        DELETE FROM
-                            friendships
-                        WHERE
-                            friendship_id = %s
-                        """,
-                        [friendship_id],
-                    )
-                    rows_affected = db.rowcount
-                    if rows_affected > 0:
-                        return True
-                    else:
-                        return FriendshipErrorMsg(
-                            message="Friendship not found"
-                        )
-        except Exception as e:
-            return FriendshipErrorMsg(message="error!" + str(e))
+    def remove_friendship(self, friendship_id: int, user_id: int) -> bool:
+        with pool.connection() as conn:
+            with conn.cursor() as db:
+                db.execute(
+                    """
+                    DELETE FROM friendships
+                    WHERE friendship_id = %s
+                    AND (sender_id = %s OR recipient_id = %s)
+                    RETURNING friendship_id;
+                    """,
+                    [friendship_id, user_id, user_id],
+                )
+                record = db.fetchone()
+                return record is not None

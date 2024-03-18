@@ -3,14 +3,14 @@ import useToken from '@galvanize-inc/jwtdown-for-react'
 
 const Dashboard = () => {
     const [friendWorkouts, setFriendWorkouts] = useState([])
-    const { accessToken } = useToken()
+    const { token } = useToken()
 
     useEffect(() => {
         const fetchFriendWorkouts = async () => {
             try {
                 const response = await fetch('http://localhost:8000/workouts', {
                     headers: {
-                        Authorization: `Bearer ${accessToken}`,
+                        Authorization: `Bearer ${token}`,
                     },
                 })
                 if (response.ok) {
@@ -24,10 +24,10 @@ const Dashboard = () => {
             }
         }
 
-        if (accessToken) {
+        if (token) {
             fetchFriendWorkouts()
         }
-    }, [accessToken])
+    }, [token])
 
     return (
         <div>

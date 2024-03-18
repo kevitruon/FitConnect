@@ -56,14 +56,12 @@ steps = [
         """
         CREATE TABLE friendships (
             friendship_id SERIAL PRIMARY KEY,
-            user1_id INTEGER REFERENCES users(user_id),
-            user2_id INTEGER REFERENCES users(user_id),
+            sender_id INTEGER REFERENCES users(user_id) NOT NULL,
+            recipient_id INTEGER REFERENCES users(user_id) NOT NULL,
             status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
-            date_requested TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            date_accepted TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT unique_friendship UNIQUE (sender_id, recipient_id)
         );
-
-
         """,
         # "Down" SQL statement
         """
