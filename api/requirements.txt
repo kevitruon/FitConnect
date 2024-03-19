@@ -7,3 +7,4 @@ python-multipart==0.0.5
 psycopg[binary,pool]==3.1.4
 jwtdown-fastapi>=0.2.0
 pydantic[email]==1.9.0
+pytest==7.1.2
