@@ -14,6 +14,13 @@ from authenticator import authenticator
 
 
 app = FastAPI()
+
+
+@app.get('/')
+def root():
+    return {"message": "You hit the root path!"}
+
+
 app.include_router(accounts.router)
 app.include_router(authenticator.router)
 app.include_router(friendships.router)
