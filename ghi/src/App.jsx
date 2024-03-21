@@ -5,8 +5,7 @@ import Registration from './pages/Registration'
 import Dashboard from './pages/Dashboard'
 import WorkoutLogging from './pages/WorkoutLogging'
 import WorkoutHistory from './pages/WorkoutHistory'
-import WorkoutDetail from './pages/WorkoutDetail' // Fix the import path
-import Settings from './pages/Settings'
+import WorkoutDetail from './pages/WorkoutDetail'
 import UsersPage from './pages/UsersPage'
 import FriendsPage from './pages/FriendsPage'
 import Navbar from './pages/Navbar'
@@ -43,7 +42,6 @@ function App() {
                             path="/workouts/:id"
                             element={<WorkoutDetail />}
                         />
-                        <Route path="/settings" element={<Settings />} />
                         <Route path="/find-friends" element={<UsersPage />} />
                         <Route path="/friends" element={<FriendsPage />} />
                     </Routes>

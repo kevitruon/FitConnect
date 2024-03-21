@@ -26,7 +26,7 @@ const FriendsPage = () => {
                 )
                 const pendingRequests = friendshipsData.filter(
                     (friendship) =>
-                        friendship.recipient_id === userData.account.id &&
+                        friendship.recipient_id == userData.account.id &&
                         friendship.status === 'pending'
                 )
                 setFriends(acceptedFriendships)
@@ -43,8 +43,30 @@ const FriendsPage = () => {
     }, [token, fetchWithCookie])
 
     useEffect(() => {
-        fetchFriendRequests()
+        const fetchData = debounce(() => {
+            fetchFriendRequests()
+        }, 500)
+
+        fetchData()
+
+        return () => {
+            fetchData.cancel()
+        }
     }, [fetchFriendRequests])
+
+    const debounce = (func, delay) => {
+        let timeoutId
+        const debouncedFunc = (...args) => {
+            clearTimeout(timeoutId)
+            timeoutId = setTimeout(() => {
+                func(...args)
+            }, delay)
+        }
+        debouncedFunc.cancel = () => {
+            clearTimeout(timeoutId)
+        }
+        return debouncedFunc
+    }
 
     const getUsernameById = (userId) => {
         const user = users.find((user) => user.id == userId)

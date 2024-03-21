@@ -8,7 +8,7 @@ function ListWorkouts() {
     const [workouts, setWorkouts] = useState([])
 
     useEffect(() => {
-        const fetchWorkouts = async () => {
+        const fetchWorkouts = debounce(async () => {
             try {
                 const response = await fetch('http://localhost:8000/workouts', {
                     headers: {
@@ -24,10 +24,28 @@ function ListWorkouts() {
             } catch (error) {
                 console.error('Failed to fetch workouts:', error)
             }
-        }
+        }, 500)
 
         fetchWorkouts()
+
+        return () => {
+            fetchWorkouts.cancel()
+        }
     }, [token])
+
+    const debounce = (func, delay) => {
+        let timeoutId
+        const debouncedFunc = (...args) => {
+            clearTimeout(timeoutId)
+            timeoutId = setTimeout(() => {
+                func(...args)
+            }, delay)
+        }
+        debouncedFunc.cancel = () => {
+            clearTimeout(timeoutId)
+        }
+        return debouncedFunc
+    }
 
     const handleDeleteWorkout = async (workoutId) => {
         try {

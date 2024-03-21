@@ -19,10 +19,32 @@ const FriendRequests = ({ currentUser }) => {
     }, [fetchWithCookie, currentUser])
 
     useEffect(() => {
-        if (currentUser) {
-            fetchFriendRequests()
+        const fetchRequests = debounce(() => {
+            if (currentUser) {
+                fetchFriendRequests()
+            }
+        }, 500)
+
+        fetchRequests()
+
+        return () => {
+            fetchRequests.cancel()
         }
-    }, [fetchWithCookie, currentUser, fetchFriendRequests])
+    }, [currentUser, fetchFriendRequests])
+
+    const debounce = (func, delay) => {
+        let timeoutId
+        const debouncedFunc = (...args) => {
+            clearTimeout(timeoutId)
+            timeoutId = setTimeout(() => {
+                func(...args)
+            }, delay)
+        }
+        debouncedFunc.cancel = () => {
+            clearTimeout(timeoutId)
+        }
+        return debouncedFunc
+    }
 
     const handleAcceptRequest = async (friendshipId) => {
         try {

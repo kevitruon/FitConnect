@@ -37,8 +37,30 @@ const UserPage = () => {
     }, [token, fetchWithCookie])
 
     useEffect(() => {
-        fetchData()
+        const fetchUsers = debounce(() => {
+            fetchData()
+        }, 500)
+
+        fetchUsers()
+
+        return () => {
+            fetchUsers.cancel()
+        }
     }, [fetchData])
+
+    const debounce = (func, delay) => {
+        let timeoutId
+        const debouncedFunc = (...args) => {
+            clearTimeout(timeoutId)
+            timeoutId = setTimeout(() => {
+                func(...args)
+            }, delay)
+        }
+        debouncedFunc.cancel = () => {
+            clearTimeout(timeoutId)
+        }
+        return debouncedFunc
+    }
 
     const handleSearchInputChange = (event) => {
         setSearchQuery(event.target.value)

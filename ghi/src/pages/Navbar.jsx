@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import useToken from '@galvanize-inc/jwtdown-for-react'
 
 const Navbar = () => {
@@ -7,22 +7,39 @@ const Navbar = () => {
     const { token, logout, fetchWithCookie } = useToken()
     const navigate = useNavigate()
     const API_HOST = import.meta.env.VITE_API_HOST
-    let location = useLocation()
+
     useEffect(() => {
-        const fetchUserData = async () => {
+        const fetchUserData = debounce(async () => {
             try {
                 const data = await fetchWithCookie(`${API_HOST}/token`)
                 setUserData(data)
             } catch (error) {
                 console.error('Error fetching user data:', error)
             }
-        }
+        }, 500)
 
         if (token) {
             fetchUserData()
         }
-    }, [token, location, API_HOST, fetchWithCookie])
 
+        return () => {
+            fetchUserData.cancel()
+        }
+    }, [token, API_HOST, fetchWithCookie])
+
+    const debounce = (func, delay) => {
+        let timeoutId
+        const debouncedFunc = (...args) => {
+            clearTimeout(timeoutId)
+            timeoutId = setTimeout(() => {
+                func(...args)
+            }, delay)
+        }
+        debouncedFunc.cancel = () => {
+            clearTimeout(timeoutId)
+        }
+        return debouncedFunc
+    }
     const handleLogout = async () => {
         try {
             const success = await logout()

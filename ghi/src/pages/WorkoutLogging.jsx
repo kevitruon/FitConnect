@@ -13,7 +13,7 @@ function CreateWorkout() {
     const API_HOST = import.meta.env.VITE_API_HOST
 
     useEffect(() => {
-        const fetchUserData = async () => {
+        const fetchUserData = debounce(async () => {
             try {
                 const userData = await fetchWithCookie(`${API_HOST}/token`)
                 if (userData && userData.account && userData.account.id) {
@@ -22,9 +22,9 @@ function CreateWorkout() {
             } catch (error) {
                 console.error('Error fetching user data:', error)
             }
-        }
+        }, 500)
 
-        const fetchExercises = async () => {
+        const fetchExercises = debounce(async () => {
             try {
                 const response = await fetch(
                     'http://localhost:8000/exercises',
@@ -43,13 +43,32 @@ function CreateWorkout() {
             } catch (error) {
                 console.error('Error fetching exercises:', error)
             }
-        }
+        }, 500)
 
         if (token) {
             fetchUserData()
             fetchExercises()
         }
+
+        return () => {
+            fetchUserData.cancel()
+            fetchExercises.cancel()
+        }
     }, [token, API_HOST, fetchWithCookie])
+
+    const debounce = (func, delay) => {
+        let timeoutId
+        const debouncedFunc = (...args) => {
+            clearTimeout(timeoutId)
+            timeoutId = setTimeout(() => {
+                func(...args)
+            }, delay)
+        }
+        debouncedFunc.cancel = () => {
+            clearTimeout(timeoutId)
+        }
+        return debouncedFunc
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault()

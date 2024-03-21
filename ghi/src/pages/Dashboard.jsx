@@ -3,29 +3,44 @@ import { useNavigate } from 'react-router-dom'
 import useToken from '@galvanize-inc/jwtdown-for-react'
 
 const Dashboard = () => {
-    // const [currentUser, setCurrentUser] = useState(null)
     const [friendWorkouts, setFriendWorkouts] = useState([])
     const { fetchWithCookie, token } = useToken()
     const navigate = useNavigate()
 
     useEffect(() => {
-    const fetchData = async () => {
-        try {
-            if (token) {
-                const friendWorkoutsData = await fetchWithCookie(
-                    'http://localhost:8000/friend-workouts'
-                )
-                setFriendWorkouts(friendWorkoutsData)
+        const fetchData = debounce(async () => {
+            try {
+                if (token) {
+                    const friendWorkoutsData = await fetchWithCookie(
+                        'http://localhost:8000/friend-workouts'
+                    )
+                    setFriendWorkouts(friendWorkoutsData)
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error)
             }
-        } catch (error) {
-            console.error('Error fetching data:', error)
+        }, 500)
+
+        fetchData()
+
+        return () => {
+            fetchData.cancel()
         }
-    };
+    }, [token, fetchWithCookie])
 
-    fetchData();
-}, [token, fetchWithCookie]);
-
-
+    const debounce = (func, delay) => {
+        let timeoutId
+        const debouncedFunc = (...args) => {
+            clearTimeout(timeoutId)
+            timeoutId = setTimeout(() => {
+                func(...args)
+            }, delay)
+        }
+        debouncedFunc.cancel = () => {
+            clearTimeout(timeoutId)
+        }
+        return debouncedFunc
+    }
     return (
         <div>
             <h2>Friend Workouts</h2>
