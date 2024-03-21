@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import useToken, { useAuthContext } from '@galvanize-inc/jwtdown-for-react'
+import useToken from '@galvanize-inc/jwtdown-for-react'
 
 const Login = () => {
     const [username, setUsername] = useState('')

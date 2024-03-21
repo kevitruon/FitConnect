@@ -1,7 +1,5 @@
-import React from 'react'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '@galvanize-inc/jwtdown-for-react'
-
 import Login from './pages/Login'
 import Registration from './pages/Registration'
 import Dashboard from './pages/Dashboard'

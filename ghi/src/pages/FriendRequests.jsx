@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import useToken from '@galvanize-inc/jwtdown-for-react'
 
 const FriendRequests = ({ currentUser }) => {
@@ -35,7 +35,7 @@ const FriendRequests = ({ currentUser }) => {
                 },
             })
             console.log('Friend request accepted')
-            fetchFriendRequests()
+            useEffect()
         } catch (error) {
             console.error('Error accepting friend request:', error)
         }
@@ -51,7 +51,7 @@ const FriendRequests = ({ currentUser }) => {
                 },
             })
             console.log('Friend request rejected')
-            fetchFriendRequests()
+            useEffect()
         } catch (error) {
             console.error('Error rejecting friend request:', error)
         }

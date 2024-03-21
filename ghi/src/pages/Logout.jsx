@@ -11,7 +11,7 @@ const Logout = () => {
             await logout();
             nav("/");
         } catch (error) {
-            console.error("Unable to logout: ", str(error));
+            console.error("Unable to logout: ", error);
         }
     };
 
