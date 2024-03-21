@@ -1,29 +1,28 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import useToken from '@galvanize-inc/jwtdown-for-react'
 
 const FriendRequests = ({ currentUser }) => {
     const [friendRequests, setFriendRequests] = useState([])
     const { fetchWithCookie, token } = useToken()
 
-    useEffect(() => {
-        const fetchFriendRequests = async () => {
-            try {
-                const requests = await fetchWithCookie('/friendships')
-                const filteredRequests = requests.filter(
-                    (request) =>
-                        request.recipient_id === currentUser?.id &&
-                        request.status === 'pending'
-                )
-                setFriendRequests(filteredRequests)
-            } catch (error) {
-                console.error('Error fetching friend requests:', error)
-            }
+    const fetchFriendRequests = useCallback(async () => {
+        try {
+            const requests = await fetchWithCookie('/friendships')
+            const filteredRequests = requests.filter(
+                (request) =>
+                    request.recipient_id === currentUser?.id && request.status === 'pending'
+            )
+            setFriendRequests(filteredRequests)
+        } catch (error) {
+            console.error('Error fetching friend requests:', error)
         }
+    }, [fetchWithCookie, currentUser])
 
+    useEffect(() => {
         if (currentUser) {
             fetchFriendRequests()
         }
-    }, [fetchWithCookie, currentUser])
+    }, [fetchWithCookie, currentUser, fetchFriendRequests])
 
     const handleAcceptRequest = async (friendshipId) => {
         try {
@@ -35,7 +34,7 @@ const FriendRequests = ({ currentUser }) => {
                 },
             })
             console.log('Friend request accepted')
-            useEffect()
+            fetchFriendRequests()
         } catch (error) {
             console.error('Error accepting friend request:', error)
         }
@@ -51,7 +50,7 @@ const FriendRequests = ({ currentUser }) => {
                 },
             })
             console.log('Friend request rejected')
-            useEffect()
+            fetchFriendRequests()
         } catch (error) {
             console.error('Error rejecting friend request:', error)
         }
@@ -68,16 +67,12 @@ const FriendRequests = ({ currentUser }) => {
                         <li key={request.friendship_id}>
                             <span>{request.sender_username}</span>
                             <button
-                                onClick={() =>
-                                    handleAcceptRequest(request.friendship_id)
-                                }
+                                onClick={() => handleAcceptRequest(request.friendship_id)}
                             >
                                 Accept
                             </button>
                             <button
-                                onClick={() =>
-                                    handleRejectRequest(request.friendship_id)
-                                }
+                                onClick={() => handleRejectRequest(request.friendship_id)}
                             >
                                 Reject
                             </button>

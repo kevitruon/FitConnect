@@ -1,36 +1,25 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import useToken from '@galvanize-inc/jwtdown-for-react'
 
 const UserPage = () => {
     const [searchQuery, setSearchQuery] = useState('')
     const [users, setUsers] = useState([])
     const [currentUser, setCurrentUser] = useState(null)
-    const [friendships, setFriendships] = useState([])
+    // const [friendships, setFriendships] = useState([])
     const { fetchWithCookie, token } = useToken()
 
-    useEffect(() => {
-        fetchData()
-    }, [token])
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             if (token) {
-                const userData = await fetchWithCookie(
-                    'http://localhost:8000/token'
-                )
+                const userData = await fetchWithCookie('http://localhost:8000/token')
                 if (userData && userData.account) {
                     setCurrentUser(userData.account)
                 }
-
                 const friendshipsData = await fetchWithCookie(
                     `http://localhost:8000/friendships`
                 )
-                setFriendships(friendshipsData)
-
-                const allUsers = await fetchWithCookie(
-                    'http://localhost:8000/users'
-                )
-
+                // setFriendships(friendshipsData)
+                const allUsers = await fetchWithCookie('http://localhost:8000/users')
                 const availableUsers = allUsers.filter(
                     (user) =>
                         user.id !== userData.account.id &&
@@ -40,15 +29,16 @@ const UserPage = () => {
                                 friendship.sender_id == user.id
                         )
                 )
-                console.log('UserData:', userData)
-                console.log('FriendshipData:', friendshipsData)
-                console.log('Available users:', availableUsers)
                 setUsers(availableUsers)
             }
         } catch (error) {
             console.error('Error fetching data:', error)
         }
-    }
+    }, [token, fetchWithCookie])
+
+    useEffect(() => {
+        fetchData()
+    }, [fetchData])
 
     const handleSearchInputChange = (event) => {
         setSearchQuery(event.target.value)

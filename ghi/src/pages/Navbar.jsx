@@ -21,12 +21,15 @@ const Navbar = () => {
         if (token) {
             fetchUserData()
         }
-    }, [location])
+    }, [token, location, API_HOST, fetchWithCookie])
 
     const handleLogout = async () => {
         try {
-            await logout()
-            navigate('/login')
+            const success = await logout()
+            if (success) {
+                localStorage.removeItem('token')
+                navigate('/login')
+            }
         } catch (error) {
             console.error('Logout error:', error)
         }
@@ -34,25 +37,25 @@ const Navbar = () => {
 
     return (
         <nav>
-            <ul>
-                <li>
-                    <Link to="/">Dashboard</Link>
-                </li>
-                <li>
-                    <Link to="/profile">Profile</Link>
-                </li>
-                <li>
-                    <Link to="/log-workout">Workout Logging</Link>
-                </li>
-                <li>
-                    <Link to="/find-friends">Find Friends</Link>
-                </li>
-                <li>
-                    <Link to="/workout-history">Workout History</Link>
-                </li>
-            </ul>
             {token && userData ? (
                 <div>
+                    <ul>
+                        <li>
+                            <Link to="/">Home Feed</Link>
+                        </li>
+                        <li>
+                            <Link to="/log-workout">Workout Logging</Link>
+                        </li>
+                        <li>
+                            <Link to="/friends">Friends List</Link>
+                        </li>
+                        <li>
+                            <Link to="/find-friends">Find Friends</Link>
+                        </li>
+                        <li>
+                            <Link to="/workout-history">Workout History</Link>
+                        </li>
+                    </ul>
                     <span>Welcome, {userData.account.username} </span>
                     <button onClick={handleLogout}>Logout</button>
                 </div>

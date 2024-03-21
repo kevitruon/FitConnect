@@ -6,13 +6,11 @@ import Dashboard from './pages/Dashboard'
 import WorkoutLogging from './pages/WorkoutLogging'
 import WorkoutHistory from './pages/WorkoutHistory'
 import WorkoutDetail from './pages/WorkoutDetail' // Fix the import path
-import UpdateWorkout from './pages/WorkoutUpdate'
-import ExerciseLibrary from './pages/ExerciseLibrary'
-import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import UsersPage from './pages/UsersPage'
-
+import FriendsPage from './pages/FriendsPage'
 import Navbar from './pages/Navbar'
+
 function App() {
     const API_HOST = import.meta.env.VITE_API_HOST
 
@@ -45,19 +43,10 @@ function App() {
                             path="/workouts/:id"
                             element={<WorkoutDetail />}
                         />
-                        <Route
-                            path="/workouts/:workoutId/update"
-                            element={<UpdateWorkout />}
-                        />
-                        <Route
-                            path="/exercises"
-                            element={<ExerciseLibrary />}
-                        />
-                        <Route path="/profile" element={<Profile />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="/find-friends" element={<UsersPage />} />
+                        <Route path="/friends" element={<FriendsPage />} />
                     </Routes>
-
                     <footer className="bg-gray-800 text-white py-4"></footer>
                 </div>
             </Router>

@@ -5,34 +5,62 @@ import useToken from '@galvanize-inc/jwtdown-for-react'
 function CreateWorkout() {
     const [workoutDate, setWorkoutDate] = useState('')
     const [notes, setNotes] = useState('')
-    const [sets, setSets] = useState([
-        { exerciseId: '', setNumber: '', weight: '', reps: '' },
-    ])
-    const [userId, setUserId] = useState(null) // New state to store user ID
+    const [exercises, setExercises] = useState([])
+    const [selectedExercises, setSelectedExercises] = useState([])
+    const [userId, setUserId] = useState(null)
     const { token, fetchWithCookie } = useToken()
     const navigate = useNavigate()
     const API_HOST = import.meta.env.VITE_API_HOST
 
     useEffect(() => {
-        const fetchUserId = async () => {
+        const fetchUserData = async () => {
             try {
                 const userData = await fetchWithCookie(`${API_HOST}/token`)
                 if (userData && userData.account && userData.account.id) {
-                    setUserId(userData.account.id) // Update userId state with user_id
-                    console.log(userData)
+                    setUserId(userData.account.id)
                 }
             } catch (error) {
                 console.error('Error fetching user data:', error)
             }
         }
 
-        if (token) {
-            fetchUserId()
+        const fetchExercises = async () => {
+            try {
+                const response = await fetch(
+                    'http://localhost:8000/exercises',
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                )
+                if (response.ok) {
+                    const data = await response.json()
+                    setExercises(data)
+                } else {
+                    console.error('Failed to fetch exercises')
+                }
+            } catch (error) {
+                console.error('Error fetching exercises:', error)
+            }
         }
-    }, [])
+
+        if (token) {
+            fetchUserData()
+            fetchExercises()
+        }
+    }, [token, API_HOST, fetchWithCookie])
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+        const sets = selectedExercises.flatMap((exercise) =>
+            exercise.sets.map((set, index) => ({
+                exercise_id: exercise.exercise_id,
+                set_number: index + 1,
+                weight: set.weight,
+                reps: set.reps,
+            }))
+        )
         const response = await fetch('http://localhost:8000/workouts', {
             method: 'POST',
             headers: {
@@ -41,17 +69,11 @@ function CreateWorkout() {
             },
             body: JSON.stringify({
                 workout: {
-                    // Include the workout field here
                     user_id: userId,
                     workout_date: workoutDate,
                     notes: notes,
                 },
-                sets: sets.map(({ exerciseId, setNumber, weight, reps }) => ({
-                    exercise_id: exerciseId,
-                    set_number: setNumber,
-                    weight: weight,
-                    reps: reps,
-                })),
+                sets: sets,
             }),
         })
         if (response.ok) {
@@ -61,23 +83,41 @@ function CreateWorkout() {
         }
     }
 
-    const handleSetChange = (index, field, value) => {
-        const newSets = [...sets]
-        newSets[index][field] = value
-        setSets(newSets)
+    const addExercise = (e) => {
+        const exerciseId = parseInt(e.target.value)
+        if (exerciseId) {
+            const exercise = exercises.find(
+                (ex) => ex.exercise_id === exerciseId
+            )
+            setSelectedExercises([
+                ...selectedExercises,
+                { ...exercise, sets: [{ weight: '', reps: '' }] },
+            ])
+        }
     }
 
-    const addSet = () => {
-        setSets([
-            ...sets,
-            { exerciseId: '', setNumber: '', weight: '', reps: '' },
-        ])
+    const removeExercise = (exerciseIndex) => {
+        const newSelectedExercises = [...selectedExercises]
+        newSelectedExercises.splice(exerciseIndex, 1)
+        setSelectedExercises(newSelectedExercises)
     }
 
-    const removeSet = (index) => {
-        const newSets = [...sets]
-        newSets.splice(index, 1)
-        setSets(newSets)
+    const handleSetChange = (exerciseIndex, setIndex, field, value) => {
+        const newSelectedExercises = [...selectedExercises]
+        newSelectedExercises[exerciseIndex].sets[setIndex][field] = value
+        setSelectedExercises(newSelectedExercises)
+    }
+
+    const addSet = (exerciseIndex) => {
+        const newSelectedExercises = [...selectedExercises]
+        newSelectedExercises[exerciseIndex].sets.push({ weight: '', reps: '' })
+        setSelectedExercises(newSelectedExercises)
+    }
+
+    const removeSet = (exerciseIndex, setIndex) => {
+        const newSelectedExercises = [...selectedExercises]
+        newSelectedExercises[exerciseIndex].sets.splice(setIndex, 1)
+        setSelectedExercises(newSelectedExercises)
     }
 
     return (
@@ -107,106 +147,111 @@ function CreateWorkout() {
                         className="border rounded px-2 py-1 w-full"
                     ></textarea>
                 </div>
-                <h3 className="text-lg font-semibold">Sets</h3>
-                {sets.map((set, index) => (
-                    <div key={index} className="space-y-2">
-                        <div>
-                            <label
-                                htmlFor={`exerciseId-${index}`}
-                                className="block"
+                <div>
+                    <label htmlFor="exercise" className="block">
+                        Add Exercise:
+                    </label>
+                    <select
+                        id="exercise"
+                        onChange={addExercise}
+                        className="border rounded px-2 py-1 w-full"
+                    >
+                        <option value="">Select an exercise</option>
+                        {exercises.map((exercise) => (
+                            <option
+                                key={exercise.exercise_id}
+                                value={exercise.exercise_id}
                             >
-                                Exercise ID:
-                            </label>
-                            <input
-                                type="text"
-                                id={`exerciseId-${index}`}
-                                value={set.exerciseId}
-                                onChange={(e) =>
-                                    handleSetChange(
-                                        index,
-                                        'exerciseId',
-                                        e.target.value
-                                    )
-                                }
-                                className="border rounded px-2 py-1 w-full"
-                            />
-                        </div>
-                        <div>
-                            <label
-                                htmlFor={`setNumber-${index}`}
-                                className="block"
+                                {exercise.exercise_name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                {selectedExercises.map((exercise, exerciseIndex) => (
+                    <div
+                        key={exercise.exercise_id}
+                        className="border rounded px-4 py-2 mb-4"
+                    >
+                        <div className="flex justify-between items-center">
+                            <p className="font-bold">
+                                {exercise.exercise_name}
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => removeExercise(exerciseIndex)}
+                                className="bg-red-500 text-white px-3 py-1 rounded"
                             >
-                                Set Number:
-                            </label>
-                            <input
-                                type="number"
-                                id={`setNumber-${index}`}
-                                value={set.setNumber}
-                                onChange={(e) =>
-                                    handleSetChange(
-                                        index,
-                                        'setNumber',
-                                        e.target.value
-                                    )
-                                }
-                                className="border rounded px-2 py-1 w-full"
-                            />
+                                Remove Exercise
+                            </button>
                         </div>
-                        <div>
-                            <label
-                                htmlFor={`weight-${index}`}
-                                className="block"
-                            >
-                                Weight:
-                            </label>
-                            <input
-                                type="number"
-                                id={`weight-${index}`}
-                                value={set.weight}
-                                onChange={(e) =>
-                                    handleSetChange(
-                                        index,
-                                        'weight',
-                                        e.target.value
-                                    )
-                                }
-                                className="border rounded px-2 py-1 w-full"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor={`reps-${index}`} className="block">
-                                Reps:
-                            </label>
-                            <input
-                                type="number"
-                                id={`reps-${index}`}
-                                value={set.reps}
-                                onChange={(e) =>
-                                    handleSetChange(
-                                        index,
-                                        'reps',
-                                        e.target.value
-                                    )
-                                }
-                                className="border rounded px-2 py-1 w-full"
-                            />
-                        </div>
+                        {exercise.sets.map((set, setIndex) => (
+                            <div key={setIndex} className="space-y-2">
+                                <div>
+                                    <label
+                                        htmlFor={`weight-${exerciseIndex}-${setIndex}`}
+                                        className="block"
+                                    >
+                                        Weight:
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id={`weight-${exerciseIndex}-${setIndex}`}
+                                        value={set.weight}
+                                        onChange={(e) =>
+                                            handleSetChange(
+                                                exerciseIndex,
+                                                setIndex,
+                                                'weight',
+                                                e.target.value
+                                            )
+                                        }
+                                        className="border rounded px-2 py-1 w-full"
+                                    />
+                                </div>
+                                <div>
+                                    <label
+                                        htmlFor={`reps-${exerciseIndex}-${setIndex}`}
+                                        className="block"
+                                    >
+                                        Reps:
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id={`reps-${exerciseIndex}-${setIndex}`}
+                                        value={set.reps}
+                                        onChange={(e) =>
+                                            handleSetChange(
+                                                exerciseIndex,
+                                                setIndex,
+                                                'reps',
+                                                e.target.value
+                                            )
+                                        }
+                                        className="border rounded px-2 py-1 w-full"
+                                    />
+                                </div>
+                                {setIndex > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            removeSet(exerciseIndex, setIndex)
+                                        }
+                                        className="bg-red-500 text-white px-3 py-1 rounded"
+                                    >
+                                        Remove Set
+                                    </button>
+                                )}
+                            </div>
+                        ))}
                         <button
                             type="button"
-                            onClick={() => removeSet(index)}
-                            className="bg-red-500 text-white px-3 py-1 rounded"
+                            onClick={() => addSet(exerciseIndex)}
+                            className="bg-blue-500 text-white px-3 py-1 rounded"
                         >
-                            Remove Set
+                            Add Set
                         </button>
                     </div>
                 ))}
-                <button
-                    type="button"
-                    onClick={addSet}
-                    className="bg-blue-500 text-white px-3 py-1 rounded"
-                >
-                    Add Set
-                </button>
                 <button
                     type="submit"
                     className="bg-green-500 text-white px-3 py-1 rounded"

@@ -295,10 +295,10 @@ class WorkoutRepository:
                             s.reps
                         FROM workouts w
                         LEFT JOIN sets s ON w.workout_id = s.workout_id
-                        WHERE w.workout_id = %s AND w.user_id = %s
+                        WHERE w.workout_id = %s
                         ORDER BY s.set_id;
                         """,
-                        [workout_id, user_id],
+                        [workout_id],
                     )
                     rows = db.fetchall()
 

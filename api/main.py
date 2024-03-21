@@ -9,6 +9,7 @@ from routers import (
     workout_comments,
     exercises,
     sets,
+    friend_workouts,
 )
 from authenticator import authenticator
 
@@ -29,6 +30,7 @@ app.include_router(workout_likes.router)
 app.include_router(workout_comments.router)
 app.include_router(exercises.router)
 app.include_router(sets.router)
+app.include_router(friend_workouts.router)
 
 app.add_middleware(
     CORSMiddleware,

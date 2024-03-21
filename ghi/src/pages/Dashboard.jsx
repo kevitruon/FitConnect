@@ -1,33 +1,30 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import useToken from '@galvanize-inc/jwtdown-for-react'
 
 const Dashboard = () => {
+    // const [currentUser, setCurrentUser] = useState(null)
     const [friendWorkouts, setFriendWorkouts] = useState([])
-    const { token } = useToken()
+    const { fetchWithCookie, token } = useToken()
+    const navigate = useNavigate()
 
     useEffect(() => {
-        const fetchFriendWorkouts = async () => {
-            try {
-                const response = await fetch('http://localhost:8000/workouts', {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                })
-                if (response.ok) {
-                    const data = await response.json()
-                    setFriendWorkouts(data)
-                } else {
-                    console.error('Failed to fetch friend workouts')
-                }
-            } catch (error) {
-                console.error('Error fetching friend workouts:', error)
+    const fetchData = async () => {
+        try {
+            if (token) {
+                const friendWorkoutsData = await fetchWithCookie(
+                    'http://localhost:8000/friend-workouts'
+                )
+                setFriendWorkouts(friendWorkoutsData)
             }
+        } catch (error) {
+            console.error('Error fetching data:', error)
         }
+    };
 
-        if (token) {
-            fetchFriendWorkouts()
-        }
-    }, [token])
+    fetchData();
+}, [token, fetchWithCookie]);
+
 
     return (
         <div>
@@ -38,8 +35,17 @@ const Dashboard = () => {
                 <ul>
                     {friendWorkouts.map((workout) => (
                         <li key={workout.workout_id}>
+                            <p>User: {workout.username}</p>
                             <p>Workout: {workout.notes}</p>
                             <p>Date: {workout.workout_date}</p>
+                            <button
+                                onClick={() =>
+                                    navigate(`/workouts/${workout.workout_id}`)
+                                }
+                                className="bg-blue-500 text-white px-3 py-1 rounded"
+                            >
+                                View Workout
+                            </button>
                         </li>
                     ))}
                 </ul>

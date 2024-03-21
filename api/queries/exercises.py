@@ -72,3 +72,31 @@ class ExerciseRepository:
         except Exception as e:
             print(e)
             return {"message": "Could not get exercises"}
+
+    def get_exercise(self, exercise_id: int) -> Union[ExerciseOut, None]:
+        try:
+            with pool.connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        SELECT
+                            exercise_id, exercise_name, description, category
+                        FROM
+                            exercises
+                        WHERE
+                            exercise_id = %s;
+                        """,
+                        [exercise_id],
+                    )
+                    record = cur.fetchone()
+                    if record:
+                        return ExerciseOut(
+                            exercise_id=record[0],
+                            exercise_name=record[1],
+                            description=record[2],
+                            category=record[3],
+                        )
+                    return None
+        except Exception as e:
+            print(e)
+            return None
