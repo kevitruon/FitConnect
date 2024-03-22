@@ -2,8 +2,7 @@ import React from 'react'
 import { AuthProvider } from '@galvanize-inc/jwtdown-for-react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
-import './index.css'
-import 'tailwindcss/tailwind.css';
+
 
 const baseUrl = import.meta.env.VITE_API_HOST
 
