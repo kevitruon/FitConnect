@@ -50,7 +50,8 @@ build-front-end-job:
         # You need to substitute in your real values for
         # GROUP_NAME, PROJECT_NAME, & WEBSERVICE_NAME below.
         # Don't forget to also replace PROJECT NAME in the npm run build line as well
-        VITE_API_HOST: https://fitconnect.mod3projects.com
+        PUBLIC_URL: https://fitconnect1.gitlab.io/fit-connect/
+        VITE_API_HOST: https://nov-2023-9-fitconnectapi.mod3projects.com/
     script:
         - cd ghi
         - npm install
