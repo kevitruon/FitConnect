@@ -28,7 +28,6 @@ app.include_router(exercises.router)
 app.include_router(sets.router)
 app.include_router(friend_workouts.router)
 
-"https://fitconnect1.gitlab.io"
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

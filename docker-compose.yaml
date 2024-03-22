@@ -6,7 +6,7 @@ volumes:
 services:
     fastapi:
         environment:
-            CORS_HOST: https://fitconnect1.gitlab.io
+            CORS_HOST: http://localhost:5173
             DATABASE_URL: postgresql://admin:password@postgres/fitconnect
             WAIT_HOSTS: postgres:5432
             SIGNING_KEY: $SIGNING_KEY
