@@ -28,9 +28,18 @@ app.include_router(exercises.router)
 app.include_router(sets.router)
 app.include_router(friend_workouts.router)
 
+"https://fitconnect1.gitlab.io"
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.environ.get("CORS_HOST")],
+    allow_origins=[
+        os.environ.get("CORS_HOST"),
+        "https://fitconnect1.gitlab.io",
+        "fitconnect1.gitlab.io",
+        "https://fitconnect1.gitlab.io/fit-connect",
+        "https://fitconnect1.gitlab.io",
+        "localhost:8000",
+        "localhost:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
