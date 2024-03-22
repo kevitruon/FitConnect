@@ -6,17 +6,17 @@ volumes:
 services:
     fastapi:
         environment:
-            CORS_HOST: http://localhost:5173
+            CORS_HOST: https://fitconnect1.gitlab.io
             DATABASE_URL: postgresql://admin:password@postgres/fitconnect
             WAIT_HOSTS: postgres:5432
-            SIGNING_KEY: 3635dd10c86b1fb68880e227d2a849883b911e53c941e070c5d18f2ef638ac5c
+            SIGNING_KEY: $SIGNING_KEY
 
         build:
             context: api
             dockerfile: Dockerfile.dev
         ports:
             - 8000:8000
-        user: "1000:1000" # on macOS and Linux, replace this with your real user id and group id
+        user: '1000:1000' # on macOS and Linux, replace this with your real user id and group id
         volumes:
             - ./api:/app
 
@@ -24,13 +24,13 @@ services:
         image: node:lts-bullseye
         command: /bin/bash run.sh
         working_dir: /app
-        user: "1000:1000" # on macOS and Linux, replace this with your real user id and group id
+        user: '1000:1000' # on macOS and Linux, replace this with your real user id and group id
         volumes:
             - ./ghi:/app
         environment:
             VITE_API_HOST: http://localhost:8000
         ports:
-            - "5173:5173"
+            - '5173:5173'
     postgres:
         image: postgres:14.5-bullseye
         volumes:
