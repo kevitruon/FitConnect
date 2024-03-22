@@ -17,7 +17,7 @@ const UserPage = () => {
                     setCurrentUser(userData.account)
                 }
                 const friendshipsData = await fetchWithCookie(
-                    `http://localhost:8000/friendships`
+                    `${API_HOST}/friendships`
                 )
                 // setFriendships(friendshipsData)
                 const allUsers = await fetchWithCookie(`${API_HOST}/users`)
