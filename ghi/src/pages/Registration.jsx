@@ -9,11 +9,12 @@ const Registration = () => {
     const [errorMessage, setErrorMessage] = useState('')
     const { login } = useToken()
     const navigate = useNavigate()
+    const API_HOST = import.meta.env.VITE_API_HOST
 
     const handleSubmit = async (e) => {
         e.preventDefault()
         try {
-            const response = await fetch('http://localhost:8000/users', {
+            const response = await fetch(`${API_HOST}/users`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -7,11 +7,12 @@ const UserPage = () => {
     const [currentUser, setCurrentUser] = useState(null)
     // const [friendships, setFriendships] = useState([])
     const { fetchWithCookie, token } = useToken()
+    const API_HOST = import.meta.env.VITE_API_HOST
 
     const fetchData = useCallback(async () => {
         try {
             if (token) {
-                const userData = await fetchWithCookie('http://localhost:8000/token')
+                const userData = await fetchWithCookie(`${API_HOST}/token`)
                 if (userData && userData.account) {
                     setCurrentUser(userData.account)
                 }
@@ -19,7 +20,7 @@ const UserPage = () => {
                     `http://localhost:8000/friendships`
                 )
                 // setFriendships(friendshipsData)
-                const allUsers = await fetchWithCookie('http://localhost:8000/users')
+                const allUsers = await fetchWithCookie(`${API_HOST}/users`)
                 const availableUsers = allUsers.filter(
                     (user) =>
                         user.id !== userData.account.id &&
@@ -34,7 +35,7 @@ const UserPage = () => {
         } catch (error) {
             console.error('Error fetching data:', error)
         }
-    }, [token, fetchWithCookie])
+    }, [token, API_HOST, fetchWithCookie])
 
     useEffect(() => {
         const fetchUsers = debounce(() => {
@@ -72,7 +73,7 @@ const UserPage = () => {
 
     const handleAddFriend = async (recipientId) => {
         try {
-            await fetch('http://localhost:8000/friendships', {
+            await fetch(`${API_HOST}/friendships`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -27,7 +27,7 @@ function CreateWorkout() {
         const fetchExercises = debounce(async () => {
             try {
                 const response = await fetch(
-                    'http://localhost:8000/exercises',
+                    `${API_HOST}/exercises`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -80,7 +80,7 @@ function CreateWorkout() {
                 reps: set.reps,
             }))
         )
-        const response = await fetch('http://localhost:8000/workouts', {
+        const response = await fetch(`${API_HOST}/workouts`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

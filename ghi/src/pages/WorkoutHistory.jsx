@@ -6,11 +6,12 @@ function ListWorkouts() {
     const { token } = useToken()
     const navigate = useNavigate()
     const [workouts, setWorkouts] = useState([])
+    const API_HOST = import.meta.env.VITE_API_HOST
 
     useEffect(() => {
         const fetchWorkouts = debounce(async () => {
             try {
-                const response = await fetch('http://localhost:8000/workouts', {
+                const response = await fetch(`${API_HOST}/workouts`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -31,7 +32,7 @@ function ListWorkouts() {
         return () => {
             fetchWorkouts.cancel()
         }
-    }, [token])
+    }, [API_HOST, token])
 
     const debounce = (func, delay) => {
         let timeoutId
@@ -51,7 +52,7 @@ function ListWorkouts() {
         try {
             console.log(workoutId)
             const response = await fetch(
-                `http://localhost:8000/workouts/${workoutId}`,
+                `${API_HOST}/workouts/${workoutId}`,
                 {
                     method: 'DELETE',
                     headers: {

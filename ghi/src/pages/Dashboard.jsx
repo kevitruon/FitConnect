@@ -6,13 +6,14 @@ const Dashboard = () => {
     const [friendWorkouts, setFriendWorkouts] = useState([])
     const { fetchWithCookie, token } = useToken()
     const navigate = useNavigate()
+    const API_HOST = import.meta.env.VITE_API_HOST
 
     useEffect(() => {
         const fetchData = debounce(async () => {
             try {
                 if (token) {
                     const friendWorkoutsData = await fetchWithCookie(
-                        'http://localhost:8000/friend-workouts'
+                        `${API_HOST}/friend-workouts`
                     )
                     setFriendWorkouts(friendWorkoutsData)
                 }
@@ -26,7 +27,7 @@ const Dashboard = () => {
         return () => {
             fetchData.cancel()
         }
-    }, [token, fetchWithCookie])
+    }, [token, API_HOST, fetchWithCookie])
 
     const debounce = (func, delay) => {
         let timeoutId

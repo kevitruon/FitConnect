@@ -7,12 +7,13 @@ function WorkoutDetail() {
     const { id } = useParams()
     const [workout, setWorkout] = useState(null)
     const [exercises, setExercises] = useState([])
+    const API_HOST = import.meta.env.VITE_API_HOST
 
     useEffect(() => {
         const fetchWorkoutDetail = debounce(async () => {
             try {
                 const response = await fetch(
-                    `http://localhost:8000/workouts/${id}`,
+                    `${API_HOST}/workouts/${id}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -29,7 +30,7 @@ function WorkoutDetail() {
                     const exercisesData = await Promise.all(
                         exerciseIds.map(async (exerciseId) => {
                             const exerciseResponse = await fetch(
-                                `http://localhost:8000/exercises/${exerciseId}`,
+                                `${API_HOST}/exercises/${exerciseId}`,
                                 {
                                     headers: {
                                         Authorization: `Bearer ${token}`,
@@ -56,7 +57,7 @@ function WorkoutDetail() {
         return () => {
             fetchWorkoutDetail.cancel()
         }
-    }, [id, token])
+    }, [id, API_HOST, token])
 
     const debounce = (func, delay) => {
         let timeoutId

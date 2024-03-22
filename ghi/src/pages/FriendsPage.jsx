@@ -7,19 +7,20 @@ const FriendsPage = () => {
     const [friendRequests, setFriendRequests] = useState([])
     const [users, setUsers] = useState([])
     const { fetchWithCookie, token } = useToken()
+    const API_HOST = import.meta.env.VITE_API_HOST
 
     const fetchFriendRequests = useCallback(async () => {
         try {
             if (token) {
                 const userData = await fetchWithCookie(
-                    'http://localhost:8000/token'
+                    `${API_HOST}/token`
                 )
                 if (userData && userData.account) {
                     setCurrentUser(userData.account)
                 }
 
                 const friendshipsData = await fetchWithCookie(
-                    'http://localhost:8000/friendships'
+                    `${API_HOST}/friendships`
                 )
                 const acceptedFriendships = friendshipsData.filter(
                     (friendship) => friendship.status === 'accepted'
@@ -33,14 +34,14 @@ const FriendsPage = () => {
                 setFriendRequests(pendingRequests)
 
                 const allUsers = await fetchWithCookie(
-                    'http://localhost:8000/users'
+                    `${API_HOST}/users`
                 )
                 setUsers(allUsers)
             }
         } catch (error) {
             console.error('Error fetching data:', error)
         }
-    }, [token, fetchWithCookie])
+    }, [token, API_HOST, fetchWithCookie])
 
     useEffect(() => {
         const fetchData = debounce(() => {
@@ -76,7 +77,7 @@ const FriendsPage = () => {
     const handleAcceptRequest = async (friendshipId) => {
         try {
             await fetch(
-                `http://localhost:8000/friendships/${friendshipId}/accept`,
+                `${API_HOST}/friendships/${friendshipId}/accept`,
                 {
                     method: 'PUT',
                     headers: {
@@ -95,7 +96,7 @@ const FriendsPage = () => {
 
     const handleRejectRequest = async (friendshipId) => {
         try {
-            await fetch(`http://localhost:8000/friendships/${friendshipId}`, {
+            await fetch(`${API_HOST}/friendships/${friendshipId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
