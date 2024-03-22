@@ -65,22 +65,14 @@ async def create_user(
     hashed_password = authenticator.hash_password(info.password)
     try:
         account = repo.create(info, hashed_password)
-        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAA")
     except DuplicateAccountError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot create an user with those credentials",
         )
-    print("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
     form = AccountForm(username=info.username, password=info.password)
     print()
-    print("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
     token = await authenticator.login(response, request, form, repo)
-    # token = {
-    #     account: {"id": "1", "username": "kevit", "password": "<PASSWORD>"}
-    # }
-    print("This is token", token)
-    print("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD")
     return AccountToken(account=account, **token.dict())
 
 

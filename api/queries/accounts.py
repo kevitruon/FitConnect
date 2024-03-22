@@ -44,8 +44,6 @@ class AccountRepository:
         self, user: AccountIn, hashed_password: str
     ) -> AccountOutWithPassword:
         try:
-            print("USER", user)
-            print("HASHED", hashed_password)
             with pool.connection() as conn:
                 with conn.cursor() as cur:
                     result = cur.execute(
@@ -70,7 +68,6 @@ class AccountRepository:
                     )
                     id = result.fetchone()[0]
                     old_data = user.dict()
-                    print("SADASDSADASD", id)
 
                     return AccountOutWithPassword(
                         **old_data,
@@ -117,8 +114,6 @@ class AccountRepository:
 
     def get(self, username: str) -> AccountOutWithPassword:
         try:
-            print("is trying get somehow?")
-            print("username", username)
             with pool.connection() as conn:
                 with conn.cursor() as db:
                     result = db.execute(
@@ -137,7 +132,6 @@ class AccountRepository:
                     if record is None:
                         return None
                     user_data = self.record_to_user_out(record)
-                    print("USER DATA", user_data)
                     return AccountOutWithPassword(**user_data.dict())
         except Exception:
             return {"message": "Could not get account"}

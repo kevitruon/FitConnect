@@ -35,7 +35,6 @@ app.add_middleware(
         "https://fitconnect1.gitlab.io",
         "fitconnect1.gitlab.io",
         "https://fitconnect1.gitlab.io/fit-connect",
-        "https://fitconnect1.gitlab.io",
         "localhost:8000",
         "localhost:5173",
     ],

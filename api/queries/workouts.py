@@ -39,7 +39,6 @@ class WorkoutRepository:
     def create(
         self, workout: WorkoutIn, sets: SetIn, user_id: int
     ) -> Optional[WorkoutOut]:
-        print("returned sets:")
         try:
             with pool.connection() as conn:
                 with conn.cursor() as cur:
@@ -74,7 +73,6 @@ class WorkoutRepository:
                                 "reps": set_data["reps"],
                             }
                         )
-                    print("AAAAAAAAAA", set_dict_values)
                     cur.executemany(
                         """
                         INSERT INTO sets (
@@ -88,13 +86,9 @@ class WorkoutRepository:
                         """,
                         set_values,
                     )
-                    for set_data in set_dict_values:
-                        print("SET DATA", set_data)
                     sets_list = [
                         SetOut(**set_data) for set_data in set_dict_values
                     ]
-
-                    print("SET LIST", sets_list)
                     return WorkoutOut(
                         workout_id=workout_id,
                         user_id=user_id,
