@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import useToken from '@galvanize-inc/jwtdown-for-react'
+import { Calendar, FileText, Dumbbell, ArrowLeft } from 'lucide-react'
 
 function WorkoutDetail() {
     const { token } = useToken()
     const { id } = useParams()
+    const navigate = useNavigate()
     const [workout, setWorkout] = useState(null)
     const [exercises, setExercises] = useState([])
     const API_HOST = import.meta.env.VITE_API_HOST
@@ -73,77 +75,171 @@ function WorkoutDetail() {
         return debouncedFunc
     }
 
-
     if (!workout) {
-        return <div>Loading...</div>
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-slate-600">Loading workout details...</p>
+                </div>
+            </div>
+        )
     }
 
     const getExerciseName = (exerciseId) => {
         const exercise = exercises.find((ex) => ex.exercise_id === exerciseId)
-        return exercise ? exercise.exercise_name : ''
+        return exercise ? exercise.exercise_name : 'Unknown Exercise'
     }
 
+    const getExerciseCategory = (exerciseId) => {
+        const exercise = exercises.find((ex) => ex.exercise_id === exerciseId)
+        return exercise ? exercise.category : ''
+    }
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString)
+        return date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        })
+    }
+
+    const getTotalVolume = (sets) => {
+        return sets.reduce((total, set) => total + (set.weight * set.reps), 0)
+    }
+
+    const groupedExercises = workout.sets.reduce((acc, set) => {
+        const existingExercise = acc.find(
+            (ex) => ex.exercise_id === set.exercise_id
+        )
+        if (existingExercise) {
+            existingExercise.sets.push(set)
+        } else {
+            acc.push({
+                exercise_id: set.exercise_id,
+                exercise_name: getExerciseName(set.exercise_id),
+                category: getExerciseCategory(set.exercise_id),
+                sets: [set],
+            })
+        }
+        return acc
+    }, [])
+
     return (
-        <div className="max-w-md mx-auto mt-10">
-            <h2 className="text-2xl font-bold mb-4">Workout Detail</h2>
-            <div className="border rounded px-4 py-2">
-                <p className="font-bold">
-                    Workout Date: {workout.workout_date}
-                </p>
-                <p className="text-sm">Notes: {workout.notes}</p>
-                <h3 className="text-lg font-semibold mt-4">Exercises</h3>
-                <div className="space-y-4">
-                    {workout.sets
-                        .reduce((acc, set) => {
-                            const existingExercise = acc.find(
-                                (ex) => ex.exercise_id === set.exercise_id
-                            )
-                            if (existingExercise) {
-                                existingExercise.sets.push(set)
-                            } else {
-                                acc.push({
-                                    exercise_id: set.exercise_id,
-                                    exercise_name: getExerciseName(
-                                        set.exercise_id
-                                    ),
-                                    sets: [set],
-                                })
-                            }
-                            return acc
-                        }, [])
-                        .map((exercise) => (
-                            <div key={exercise.exercise_id}>
-                                <p className="font-bold">
-                                    {exercise.exercise_name}
-                                </p>
-                                <table className="table-auto w-full mt-2">
-                                    <thead>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Back Button */}
+                <button
+                    onClick={() => navigate('/workout-history')}
+                    className="flex items-center space-x-2 text-slate-600 hover:text-slate-900 mb-6 transition-colors"
+                >
+                    <ArrowLeft size={20} />
+                    <span className="font-semibold">Back to History</span>
+                </button>
+
+                {/* Header Card */}
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-8 text-white mb-6">
+                    <div className="flex items-center space-x-3 mb-4">
+                        <Calendar size={24} />
+                        <span className="text-lg font-medium">
+                            {formatDate(workout.workout_date)}
+                        </span>
+                    </div>
+                    <h1 className="text-3xl font-bold mb-2">
+                        {workout.notes || 'Workout Session'}
+                    </h1>
+                    <div className="flex items-center space-x-6 mt-6">
+                        <div className="bg-white/20 rounded-lg px-4 py-2">
+                            <p className="text-sm opacity-90">Exercises</p>
+                            <p className="text-2xl font-bold">{groupedExercises.length}</p>
+                        </div>
+                        <div className="bg-white/20 rounded-lg px-4 py-2">
+                            <p className="text-sm opacity-90">Total Sets</p>
+                            <p className="text-2xl font-bold">{workout.sets.length}</p>
+                        </div>
+                        <div className="bg-white/20 rounded-lg px-4 py-2">
+                            <p className="text-sm opacity-90">Volume</p>
+                            <p className="text-2xl font-bold">{getTotalVolume(workout.sets).toLocaleString()} lbs</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Exercises */}
+                <div className="space-y-6">
+                    {groupedExercises.map((exercise, index) => (
+                        <div
+                            key={index}
+                            className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+                        >
+                            {/* Exercise Header */}
+                            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                                            <Dumbbell className="text-white" size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-bold text-slate-900">
+                                                {exercise.exercise_name}
+                                            </h3>
+                                            <p className="text-sm text-slate-500">{exercise.category}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm text-slate-500">Total Volume</p>
+                                        <p className="text-lg font-bold text-slate-900">
+                                            {getTotalVolume(exercise.sets).toLocaleString()} lbs
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Sets Table */}
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-slate-50 border-b border-slate-200">
                                         <tr>
-                                            <th className="px-4 py-2">Set</th>
-                                            <th className="px-4 py-2">
+                                            <th className="text-left py-3 px-6 text-sm font-semibold text-slate-700">
+                                                Set
+                                            </th>
+                                            <th className="text-left py-3 px-6 text-sm font-semibold text-slate-700">
                                                 Weight
                                             </th>
-                                            <th className="px-4 py-2">Reps</th>
+                                            <th className="text-left py-3 px-6 text-sm font-semibold text-slate-700">
+                                                Reps
+                                            </th>
+                                            <th className="text-left py-3 px-6 text-sm font-semibold text-slate-700">
+                                                Volume
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {exercise.sets.map((set, index) => (
-                                            <tr key={index}>
-                                                <td className="border px-4 py-2">
+                                        {exercise.sets.map((set, setIndex) => (
+                                            <tr
+                                                key={setIndex}
+                                                className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                                            >
+                                                <td className="py-4 px-6 font-semibold text-slate-900">
                                                     {set.set_number}
                                                 </td>
-                                                <td className="border px-4 py-2">
-                                                    {set.weight}
+                                                <td className="py-4 px-6 text-slate-700">
+                                                    {set.weight} lbs
                                                 </td>
-                                                <td className="border px-4 py-2">
-                                                    {set.reps}
+                                                <td className="py-4 px-6 text-slate-700">
+                                                    {set.reps} reps
+                                                </td>
+                                                <td className="py-4 px-6 font-semibold text-blue-600">
+                                                    {(set.weight * set.reps).toLocaleString()} lbs
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             </div>
-                        ))}
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>

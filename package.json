@@ -12,7 +12,8 @@
     "dependencies": {
         "@craco/craco": "^7.1.0",
         "react": "^18.2.0",
-        "react-dom": "^18.2.0"
+        "react-dom": "^18.2.0",
+        "repopack": "^0.1.45"
     },
     "devDependencies": {
         "@galvanize-inc/jwtdown-for-react": "^0.2.1",

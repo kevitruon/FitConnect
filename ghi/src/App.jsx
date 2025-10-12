@@ -16,36 +16,24 @@ function App() {
     if (!API_HOST) {
         throw new Error('VITE_API_HOST is not defined')
     }
+
     return (
         <AuthProvider baseUrl={API_HOST}>
             <Router>
-                <div className="App">
-                    <nav className="bg-gray-800">
-                        <Navbar />
-                    </nav>
+                <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+                    <Navbar />
 
                     <Routes>
-                        {' '}
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Registration />} />
                         <Route path="/dashboard" element={<Dashboard />} />
-                        <Route
-                            path="/log-workout"
-                            element={<WorkoutLogging />}
-                        />
-                        <Route
-                            path="/workout-history"
-                            element={<WorkoutHistory />}
-                        />
-                        <Route
-                            path="/workouts/:id"
-                            element={<WorkoutDetail />}
-                        />
+                        <Route path="/log-workout" element={<WorkoutLogging />} />
+                        <Route path="/workout-history" element={<WorkoutHistory />} />
+                        <Route path="/workouts/:id" element={<WorkoutDetail />} />
                         <Route path="/find-friends" element={<UsersPage />} />
                         <Route path="/friends" element={<FriendsPage />} />
                     </Routes>
-                    <footer className="bg-gray-800 text-white py-4"></footer>
                 </div>
             </Router>
         </AuthProvider>
