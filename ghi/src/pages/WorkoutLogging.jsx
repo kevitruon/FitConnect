@@ -85,6 +85,13 @@ function CreateWorkout() {
             }))
         )
 
+        // Validation
+        if (sets.length === 0) {
+            alert('Please add at least one exercise with sets')
+            setIsLoading(false)
+            return
+        }
+
         try {
             const response = await fetch(`${API_HOST}/workouts`, {
                 method: 'POST',
@@ -96,7 +103,7 @@ function CreateWorkout() {
                     workout: {
                         user_id: userId,
                         workout_date: workoutDate,
-                        notes: notes,
+                        notes: notes || null,
                     },
                     sets: sets,
                 }),
@@ -105,10 +112,13 @@ function CreateWorkout() {
             if (response.ok) {
                 navigate('/workout-history')
             } else {
-                console.error('Create workout failed')
+                const errorData = await response.json()
+                console.error('Create workout failed:', errorData)
+                alert('Failed to create workout. Please try again.')
             }
         } catch (error) {
             console.error('Error creating workout:', error)
+            alert('An error occurred while creating the workout.')
         } finally {
             setIsLoading(false)
         }
